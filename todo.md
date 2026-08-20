@@ -67,3 +67,15 @@
 - [x] Add executed UI verification for debounced job search, retained filters, and filter-driven pagination resets.
 - [ ] Verify visible focus indicators on protected-workspace command, notification, pagination, and admin controls.
 - [x] Run comprehensive verification, inspect final Git changes and security hygiene, commit the production-polish work, push to GitHub, and verify the remote head.
+- [x] Audit the supplied implementation specification against the existing database, routes, jobs, recommendations, notifications, applications, scheduling, UI, tests, and Git history.
+- [x] Define and document the verified-feed provider abstraction, job ingestion lifecycle, source metadata, duplicate identity, review states, and error boundaries without fabricating external jobs.
+- [x] Extend the job model and database helpers for ingestion records, immutable source traceability, review decisions, publication/archive lifecycle, and duplicate-safe provider imports.
+- [ ] Build protected administrator ingestion workflows for job search/filtering, imports, review, approve/reject, editing, publish/unpublish/archive, bulk-safe actions, and ingestion history.
+- [x] Add event-driven high-match candidate notifications for newly published jobs with deduplication, source-safe matching, and candidate-private delivery.
+- [x] Extend tracked applications with private notes and interview reminder fields, validation, ownership protections, responsive editing UI, and in-app reminder notifications.
+- [x] Add only supported scheduled reminder or expiration behavior after deployment, with idempotent handlers and no in-process timers.
+- [ ] Add and run comprehensive focused tests for ingestion normalization/deduplication/lifecycle, admin RBAC, matching notifications, application notes/reminders, and protected APIs.
+- [ ] Complete an administrator edit surface for all candidate-facing job fields, bulk archive/unpublish controls, and server-backed review, publication, and source filters.
+- [ ] Add executable import lifecycle, review/publish transition, and scheduled reminder idempotency behavior tests beyond source-contract assertions.
+- [ ] Inspect the authenticated gulshanverse Git identity, configure repository-local author attribution without inventing an email, and safely correct the latest commit if the identity can be verified.
+- [ ] Re-run full technical, visual, security, remote-head, and Git-attribution verification; checkpoint and push the completed work.

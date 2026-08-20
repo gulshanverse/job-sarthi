@@ -84,6 +84,10 @@ export const candidateProfiles = mysqlTable(
     weeklyDigestEnabled: boolean("weeklyDigestEnabled").default(false).notNull(),
     weeklyDigestCronTaskUid: varchar("weeklyDigestCronTaskUid", { length: 65 }),
     weeklyDigestLastSentAt: timestamp("weeklyDigestLastSentAt"),
+    highMatchNotificationsEnabled: boolean("highMatchNotificationsEnabled").default(true).notNull(),
+    applicationUpdatesEnabled: boolean("applicationUpdatesEnabled").default(true).notNull(),
+    interviewRemindersEnabled: boolean("interviewRemindersEnabled").default(true).notNull(),
+    skillInsightsEnabled: boolean("skillInsightsEnabled").default(true).notNull(),
     createdAt: timestamp("createdAt").defaultNow().notNull(),
     updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   },
@@ -132,11 +136,51 @@ export const jobs = mysqlTable(
     requiredEducation: varchar("requiredEducation", { length: 180 }),
     applicationUrl: varchar("applicationUrl", { length: 500 }),
     deadline: timestamp("deadline"),
-    status: mysqlEnum("status", ["active", "paused", "closed"]).default("active").notNull(),
+    status: mysqlEnum("status", ["active", "paused", "closed", "archived"]).default("active").notNull(),
+    reviewStatus: mysqlEnum("reviewStatus", ["pending_review", "approved", "rejected"]).default("approved").notNull(),
+    sourceProvider: varchar("sourceProvider", { length: 80 }).default("manual").notNull(),
+    sourceKey: varchar("sourceKey", { length: 240 }).notNull(),
+    externalJobId: varchar("externalJobId", { length: 180 }),
+    sourceUrl: varchar("sourceUrl", { length: 500 }),
+    importedAt: timestamp("importedAt"),
+    lastSyncedAt: timestamp("lastSyncedAt"),
+    publishedAt: timestamp("publishedAt"),
+    reviewedAt: timestamp("reviewedAt"),
+    reviewedByUserId: int("reviewedByUserId"),
+    rejectionReason: varchar("rejectionReason", { length: 500 }),
+    lastIngestionRunId: int("lastIngestionRunId"),
     postedAt: timestamp("postedAt").defaultNow().notNull(),
     createdAt: timestamp("createdAt").defaultNow().notNull(),
   },
-  table => [index("jobs_location_idx").on(table.location), index("jobs_title_idx").on(table.title)],
+  table => [
+    index("jobs_location_idx").on(table.location),
+    index("jobs_title_idx").on(table.title),
+    index("jobs_status_idx").on(table.status),
+    index("jobs_review_status_idx").on(table.reviewStatus),
+    index("jobs_source_provider_idx").on(table.sourceProvider),
+    index("jobs_published_at_idx").on(table.publishedAt),
+    uniqueIndex("jobs_source_identity_unique").on(table.sourceProvider, table.sourceKey),
+  ],
+);
+
+export const jobIngestionRuns = mysqlTable(
+  "job_ingestion_runs",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    provider: varchar("provider", { length: 80 }).notNull(),
+    triggeredByUserId: int("triggeredByUserId"),
+    status: mysqlEnum("status", ["started", "completed", "partial", "failed"]).default("started").notNull(),
+    fetchedCount: int("fetchedCount").default(0).notNull(),
+    newCount: int("newCount").default(0).notNull(),
+    updatedCount: int("updatedCount").default(0).notNull(),
+    duplicateCount: int("duplicateCount").default(0).notNull(),
+    failedCount: int("failedCount").default(0).notNull(),
+    errorSummary: varchar("errorSummary", { length: 1000 }),
+    startedAt: timestamp("startedAt").defaultNow().notNull(),
+    completedAt: timestamp("completedAt"),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+  },
+  table => [index("job_ingestion_runs_provider_idx").on(table.provider), index("job_ingestion_runs_created_idx").on(table.createdAt)],
 );
 
 export const savedJobs = mysqlTable(
@@ -164,6 +208,56 @@ export const applications = mysqlTable(
     createdAt: timestamp("createdAt").defaultNow().notNull(),
   },
   table => [uniqueIndex("applications_user_job_unique").on(table.userId, table.jobId)],
+);
+
+export const applicationNotes = mysqlTable(
+  "application_notes",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    applicationId: int("applicationId").notNull(),
+    userId: int("userId").notNull(),
+    content: text("content").notNull(),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  },
+  table => [index("application_notes_application_idx").on(table.applicationId), index("application_notes_user_idx").on(table.userId)],
+);
+
+export const interviewReminders = mysqlTable(
+  "interview_reminders",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    applicationId: int("applicationId").notNull(),
+    userId: int("userId").notNull(),
+    scheduledFor: timestamp("scheduledFor").notNull(),
+    remindAt: timestamp("remindAt").notNull(),
+    title: varchar("title", { length: 180 }).notNull(),
+    notes: text("notes"),
+    status: mysqlEnum("status", ["scheduled", "sent", "cancelled"]).default("scheduled").notNull(),
+    scheduleCronTaskUid: varchar("scheduleCronTaskUid", { length: 65 }),
+    sentAt: timestamp("sentAt"),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  },
+  table => [
+    uniqueIndex("interview_reminders_application_unique").on(table.applicationId),
+    index("interview_reminders_user_due_idx").on(table.userId, table.remindAt),
+    index("interview_reminders_status_idx").on(table.status),
+    index("interview_reminders_cron_task_idx").on(table.scheduleCronTaskUid),
+  ],
+);
+
+export const applicationTimelineEvents = mysqlTable(
+  "application_timeline_events",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    applicationId: int("applicationId").notNull(),
+    userId: int("userId").notNull(),
+    type: varchar("type", { length: 80 }).notNull(),
+    body: varchar("body", { length: 500 }).notNull(),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+  },
+  table => [index("application_timeline_application_idx").on(table.applicationId), index("application_timeline_user_idx").on(table.userId)],
 );
 
 export const recommendations = mysqlTable(
@@ -213,12 +307,20 @@ export const notifications = mysqlTable(
     title: varchar("title", { length: 180 }).notNull(),
     body: text("body").notNull(),
     href: varchar("href", { length: 300 }),
+    jobId: int("jobId"),
+    applicationId: int("applicationId"),
     fingerprint: varchar("fingerprint", { length: 180 }).notNull(),
     readAt: timestamp("readAt"),
     dismissedAt: timestamp("dismissedAt"),
     createdAt: timestamp("createdAt").defaultNow().notNull(),
   },
-  table => [index("notifications_user_idx").on(table.userId), uniqueIndex("notifications_user_fingerprint_unique").on(table.userId, table.fingerprint)],
+  table => [
+    index("notifications_user_idx").on(table.userId),
+    index("notifications_user_read_idx").on(table.userId, table.readAt),
+    index("notifications_job_idx").on(table.jobId),
+    index("notifications_application_idx").on(table.applicationId),
+    uniqueIndex("notifications_user_fingerprint_unique").on(table.userId, table.fingerprint),
+  ],
 );
 
 export type User = typeof users.$inferSelect;
@@ -227,3 +329,6 @@ export type CandidateProfile = typeof candidateProfiles.$inferSelect;
 export type InsertCandidateProfile = typeof candidateProfiles.$inferInsert;
 export type Job = typeof jobs.$inferSelect;
 export type Resume = typeof resumes.$inferSelect;
+export type Application = typeof applications.$inferSelect;
+export type ApplicationNote = typeof applicationNotes.$inferSelect;
+export type InterviewReminder = typeof interviewReminders.$inferSelect;

@@ -8,6 +8,7 @@ import { registerStorageProxy } from "./storageProxy";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { scheduledWeeklyDigest } from "../scheduledWeeklyDigest";
+import { scheduledInterviewReminder } from "../scheduledInterviewReminder";
 import { serveStatic, setupVite } from "./vite";
 
 function isPortAvailable(port: number): Promise<boolean> {
@@ -38,6 +39,7 @@ async function startServer() {
   registerStorageProxy(app);
   registerOAuthRoutes(app);
   app.post("/api/scheduled/weekly-digest", scheduledWeeklyDigest);
+  app.post("/api/scheduled/interview-reminder", scheduledInterviewReminder);
   // tRPC API
   app.use(
     "/api/trpc",

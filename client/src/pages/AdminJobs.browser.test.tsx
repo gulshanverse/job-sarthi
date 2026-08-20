@@ -17,11 +17,16 @@ vi.mock("@/lib/trpc", () => ({
   trpc: {
     adminJobs: {
       list: { useQuery: () => ({ data: [], isLoading: false }) },
+      history: { useQuery: () => ({ data: [], isLoading: false }) },
+      providerStatus: { useQuery: () => ({ data: { configured: false, label: "Verified feed (not connected)" }, isLoading: false }) },
       create: { useMutation: () => ({ isPending: false, mutate: vi.fn() }) },
+      import: { useMutation: () => ({ isPending: false, mutate: vi.fn() }) },
+      review: { useMutation: () => ({ isPending: false, mutate: vi.fn() }) },
+      publish: { useMutation: () => ({ isPending: false, mutate: vi.fn() }) },
       setStatus: { useMutation: () => ({ isPending: false, mutate: vi.fn() }) },
     },
     useUtils: () => ({
-      adminJobs: { list: { invalidate: vi.fn() } },
+      adminJobs: { list: { invalidate: vi.fn() }, history: { invalidate: vi.fn() } },
       jobs: { list: { invalidate: vi.fn() } },
       recommendations: { list: { invalidate: vi.fn() } },
     }),
@@ -47,12 +52,12 @@ describe("AdminJobs browser role access", () => {
     const user = userEvent.setup();
     render(<AdminJobs />);
     const publish = screen.getByRole("button", { name: "Publish active job" });
-    const title = screen.getByPlaceholderText("Product analyst");
+    const importJobs = screen.getByRole("button", { name: "Import jobs" });
     await user.tab();
-    expect(document.activeElement).toBe(title);
-    expect(title.matches(":focus-visible")).toBe(true);
-    expect(title.className).toContain("focus-visible:ring");
+    expect(document.activeElement).toBe(importJobs);
+    expect(importJobs.matches(":focus-visible")).toBe(true);
+    expect(importJobs.className).toContain("focus-visible:ring");
     expect(publish).toBeTruthy();
-    expect(screen.getByText("Manage active opportunities.")).toBeTruthy();
+    expect(screen.getByText("Verified job ingestion.")).toBeTruthy();
   });
 });

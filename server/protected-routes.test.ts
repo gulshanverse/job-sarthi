@@ -53,6 +53,8 @@ describe("protected Job Sarthi routes", () => {
     await expect(caller.jobs.setApplicationStatus({ jobId: 1, status: "applied", notes: "x".repeat(2001) })).rejects.toMatchObject({ code: "BAD_REQUEST" });
     await expect(caller.notifications.markRead({ notificationId: 0 })).rejects.toMatchObject({ code: "BAD_REQUEST" });
     await expect(caller.notifications.dismiss({ notificationId: 0 })).rejects.toMatchObject({ code: "BAD_REQUEST" });
+    await expect(caller.applications.addNote({ applicationId: 0, content: "" })).rejects.toMatchObject({ code: "BAD_REQUEST" });
+    await expect(caller.applications.saveReminder({ applicationId: 0, scheduledFor: new Date(), leadMinutes: 5, title: "" })).rejects.toMatchObject({ code: "BAD_REQUEST" });
     await expect(caller.recommendations.generateInsight({ jobIds: Array.from({ length: 9 }, (_, index) => index + 1) })).rejects.toMatchObject({ code: "BAD_REQUEST" });
   });
 
@@ -60,6 +62,7 @@ describe("protected Job Sarthi routes", () => {
     const user = { id: 1, openId: "candidate-1", name: "Candidate", email: "candidate@example.com", loginMethod: "manus", role: "user" as const, createdAt: new Date(), updatedAt: new Date(), lastSignedIn: new Date() };
     const caller = appRouter.createCaller({ user, req: {} as TrpcContext["req"], res: {} as TrpcContext["res"] });
     await expect(caller.adminJobs.list()).rejects.toMatchObject({ code: "FORBIDDEN" });
+    await expect(caller.adminJobs.import()).rejects.toMatchObject({ code: "FORBIDDEN" });
     await expect(caller.notifications.markRead({ notificationId: 0 })).rejects.toMatchObject({ code: "BAD_REQUEST" });
   });
 

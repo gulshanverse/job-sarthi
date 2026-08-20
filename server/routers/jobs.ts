@@ -1,6 +1,6 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
-import { createNotification, getJob, getSavedJobIds, listApplications, listJobsPage, listSavedJobs, saveJob, unsaveJob, upsertApplication } from "../db";
+import { createApplicationTimelineEvent, createNotification, getCandidateProfile, getJob, getSavedJobIds, listApplications, listJobsPage, listSavedJobs, saveJob, unsaveJob, upsertApplication } from "../db";
 import { protectedProcedure, router } from "../_core/trpc";
 
 const filters = z.object({
@@ -43,9 +43,11 @@ export const jobsRouter = router({
   })).mutation(async ({ ctx, input }) => {
     const job = await getJob(input.jobId);
     if (!job) throw new TRPCError({ code: "NOT_FOUND", message: "Job not found." });
-    await upsertApplication(ctx.user.id, input.jobId, input.status, input.notes);
+    const application = await upsertApplication(ctx.user.id, input.jobId, input.status, input.notes);
+    if (application) await createApplicationTimelineEvent(application.id, ctx.user.id, "status_changed", `Moved application to ${input.status.replace("_", " ")}.`);
     const milestone = input.status === "under_review" ? ["Application under review", `You marked ${job.title} at ${job.company} as under review.`] : input.status === "interviewing" ? ["Interview stage recorded", `You marked ${job.title} at ${job.company} as interviewing.`] : input.status === "offer" ? ["Offer stage recorded", `You marked ${job.title} at ${job.company} as an offer.`] : input.status === "selected" ? ["Selected stage recorded", `You marked ${job.title} at ${job.company} as selected.`] : null;
-    if (milestone) await createNotification({ userId: ctx.user.id, type: `application_${input.status}`, title: milestone[0], body: milestone[1], href: "/applications", fingerprint: `application:${job.id}:${input.status}` });
+    const profile = milestone ? await getCandidateProfile(ctx.user.id) : null;
+    if (milestone && profile?.applicationUpdatesEnabled) await createNotification({ userId: ctx.user.id, type: `application_${input.status}`, title: milestone[0], body: milestone[1], href: application ? `/applications/${application.id}` : "/applications", jobId: job.id, applicationId: application?.id ?? null, fingerprint: `application:${job.id}:${input.status}` });
     return { success: true };
   }),
 });

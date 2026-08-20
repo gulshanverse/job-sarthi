@@ -5,6 +5,7 @@ import { publicProcedure, router } from "./_core/trpc";
 import { jobsRouter } from "./routers/jobs";
 import { digestRouter } from "./routers/digest";
 import { adminJobsRouter } from "./routers/adminJobs";
+import { applicationsRouter } from "./routers/applications";
 import { notificationsRouter } from "./routers/notifications";
 import { profileRouter } from "./routers/profile";
 import { recommendationsRouter } from "./routers/recommendations";
@@ -22,6 +23,7 @@ export const appRouter = router({
   profile: profileRouter,
   digest: digestRouter,
   adminJobs: adminJobsRouter,
+  applications: applicationsRouter,
   jobs: jobsRouter,
   notifications: notificationsRouter,
   recommendations: recommendationsRouter,

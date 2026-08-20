@@ -2,11 +2,15 @@ import { and, asc, desc, eq, inArray, isNull, like, or, sql } from "drizzle-orm"
 import { drizzle } from "drizzle-orm/mysql2";
 import {
   applications,
+  applicationNotes,
+  applicationTimelineEvents,
   candidateProfiles,
   careerInsights,
   type CandidateProfile,
   type InsertCandidateProfile,
   type InsertUser,
+  interviewReminders,
+  jobIngestionRuns,
   jobs,
   notifications,
   recommendations,
@@ -186,9 +190,44 @@ export async function createJob(input: typeof jobs.$inferInsert) {
   return getJob(id);
 }
 
-export async function updateJobStatus(jobId: number, status: "active" | "paused" | "closed") {
+export async function updateJobStatus(jobId: number, status: "active" | "paused" | "closed" | "archived") {
   const db = await requireDb();
   await db.update(jobs).set({ status }).where(eq(jobs.id, jobId));
+  return getJob(jobId);
+}
+
+export async function getJobBySource(provider: string, sourceKey: string) {
+  const db = await requireDb();
+  return (await db.select().from(jobs).where(and(eq(jobs.sourceProvider, provider), eq(jobs.sourceKey, sourceKey))).limit(1))[0] ?? null;
+}
+
+export async function createIngestionRun(input: { provider: string; triggeredByUserId?: number | null }) {
+  const db = await requireDb();
+  const result = await db.insert(jobIngestionRuns).values({ provider: input.provider, triggeredByUserId: input.triggeredByUserId ?? null, status: "started" });
+  const id = Number((result as unknown as Array<{ insertId: number }>)[0]?.insertId);
+  return (await db.select().from(jobIngestionRuns).where(eq(jobIngestionRuns.id, id)).limit(1))[0] ?? null;
+}
+
+export async function finishIngestionRun(runId: number, input: { status: "completed" | "partial" | "failed"; fetchedCount: number; newCount: number; updatedCount: number; duplicateCount: number; failedCount: number; errorSummary?: string | null }) {
+  const db = await requireDb();
+  await db.update(jobIngestionRuns).set({ ...input, completedAt: new Date() }).where(eq(jobIngestionRuns.id, runId));
+  return (await db.select().from(jobIngestionRuns).where(eq(jobIngestionRuns.id, runId)).limit(1))[0] ?? null;
+}
+
+export async function listIngestionRuns(limit = 20) {
+  const db = await requireDb();
+  return db.select().from(jobIngestionRuns).orderBy(desc(jobIngestionRuns.createdAt)).limit(limit);
+}
+
+export async function updateImportedJob(jobId: number, input: Partial<typeof jobs.$inferInsert>) {
+  const db = await requireDb();
+  await db.update(jobs).set(input).where(eq(jobs.id, jobId));
+  return getJob(jobId);
+}
+
+export async function reviewImportedJob(jobId: number, userId: number, input: { reviewStatus: "approved" | "rejected"; rejectionReason?: string | null }) {
+  const db = await requireDb();
+  await db.update(jobs).set({ reviewStatus: input.reviewStatus, rejectionReason: input.rejectionReason ?? null, reviewedAt: new Date(), reviewedByUserId: userId }).where(eq(jobs.id, jobId));
   return getJob(jobId);
 }
 
@@ -221,6 +260,7 @@ export async function listSavedJobs(userId: number) {
 export async function upsertApplication(userId: number, jobId: number, status: "saved" | "applied" | "under_review" | "interviewing" | "offer" | "selected" | "rejected", notes?: string) {
   const db = await requireDb();
   await db.insert(applications).values({ userId, jobId, status, notes: notes ?? null }).onDuplicateKeyUpdate({ set: { status, notes: notes ?? null } });
+  return (await db.select().from(applications).where(and(eq(applications.userId, userId), eq(applications.jobId, jobId))).limit(1))[0] ?? null;
 }
 
 export async function listApplications(userId: number) {
@@ -228,7 +268,79 @@ export async function listApplications(userId: number) {
   return db.select({ application: applications, job: jobs }).from(applications).innerJoin(jobs, eq(applications.jobId, jobs.id)).where(eq(applications.userId, userId)).orderBy(desc(applications.updatedAt));
 }
 
-export async function createNotification(input: { userId: number; type: string; title: string; body: string; href?: string | null; fingerprint: string }) {
+export async function getApplicationForUser(applicationId: number, userId: number) {
+  const db = await requireDb();
+  return (await db.select({ application: applications, job: jobs }).from(applications).innerJoin(jobs, eq(applications.jobId, jobs.id)).where(and(eq(applications.id, applicationId), eq(applications.userId, userId))).limit(1))[0] ?? null;
+}
+
+export async function listApplicationNotes(applicationId: number, userId: number) {
+  const db = await requireDb();
+  return db.select().from(applicationNotes).where(and(eq(applicationNotes.applicationId, applicationId), eq(applicationNotes.userId, userId))).orderBy(desc(applicationNotes.updatedAt));
+}
+
+export async function createApplicationNote(applicationId: number, userId: number, content: string) {
+  const db = await requireDb();
+  const result = await db.insert(applicationNotes).values({ applicationId, userId, content });
+  const id = Number((result as unknown as Array<{ insertId: number }>)[0]?.insertId);
+  return (await db.select().from(applicationNotes).where(and(eq(applicationNotes.id, id), eq(applicationNotes.userId, userId))).limit(1))[0] ?? null;
+}
+
+export async function updateApplicationNote(noteId: number, applicationId: number, userId: number, content: string) {
+  const db = await requireDb();
+  await db.update(applicationNotes).set({ content }).where(and(eq(applicationNotes.id, noteId), eq(applicationNotes.applicationId, applicationId), eq(applicationNotes.userId, userId)));
+  return (await db.select().from(applicationNotes).where(and(eq(applicationNotes.id, noteId), eq(applicationNotes.applicationId, applicationId), eq(applicationNotes.userId, userId))).limit(1))[0] ?? null;
+}
+
+export async function deleteApplicationNote(noteId: number, applicationId: number, userId: number) {
+  const db = await requireDb();
+  await db.delete(applicationNotes).where(and(eq(applicationNotes.id, noteId), eq(applicationNotes.applicationId, applicationId), eq(applicationNotes.userId, userId)));
+}
+
+export async function listApplicationTimeline(applicationId: number, userId: number) {
+  const db = await requireDb();
+  return db.select().from(applicationTimelineEvents).where(and(eq(applicationTimelineEvents.applicationId, applicationId), eq(applicationTimelineEvents.userId, userId))).orderBy(desc(applicationTimelineEvents.createdAt));
+}
+
+export async function createApplicationTimelineEvent(applicationId: number, userId: number, type: string, body: string) {
+  const db = await requireDb();
+  await db.insert(applicationTimelineEvents).values({ applicationId, userId, type, body });
+}
+
+export async function getInterviewReminderForApplication(applicationId: number, userId: number) {
+  const db = await requireDb();
+  return (await db.select().from(interviewReminders).where(and(eq(interviewReminders.applicationId, applicationId), eq(interviewReminders.userId, userId))).limit(1))[0] ?? null;
+}
+
+export async function getInterviewReminderByTaskUid(taskUid: string) {
+  const db = await requireDb();
+  return (await db.select().from(interviewReminders).where(eq(interviewReminders.scheduleCronTaskUid, taskUid)).limit(1))[0] ?? null;
+}
+
+export async function saveInterviewReminder(applicationId: number, userId: number, input: { scheduledFor: Date; remindAt: Date; title: string; notes?: string | null; scheduleCronTaskUid?: string | null }) {
+  const db = await requireDb();
+  const existing = await getInterviewReminderForApplication(applicationId, userId);
+  if (existing) await db.update(interviewReminders).set({ ...input, status: "scheduled", sentAt: null }).where(eq(interviewReminders.id, existing.id));
+  else await db.insert(interviewReminders).values({ applicationId, userId, scheduledFor: input.scheduledFor, remindAt: input.remindAt, title: input.title, notes: input.notes ?? null, scheduleCronTaskUid: input.scheduleCronTaskUid ?? null, status: "scheduled" });
+  return getInterviewReminderForApplication(applicationId, userId);
+}
+
+export async function updateInterviewReminderTaskUid(reminderId: number, userId: number, taskUid: string | null) {
+  const db = await requireDb();
+  await db.update(interviewReminders).set({ scheduleCronTaskUid: taskUid }).where(and(eq(interviewReminders.id, reminderId), eq(interviewReminders.userId, userId)));
+}
+
+export async function cancelInterviewReminder(applicationId: number, userId: number) {
+  const db = await requireDb();
+  await db.update(interviewReminders).set({ status: "cancelled" }).where(and(eq(interviewReminders.applicationId, applicationId), eq(interviewReminders.userId, userId)));
+  return getInterviewReminderForApplication(applicationId, userId);
+}
+
+export async function markInterviewReminderSent(reminderId: number) {
+  const db = await requireDb();
+  await db.update(interviewReminders).set({ status: "sent", sentAt: new Date() }).where(and(eq(interviewReminders.id, reminderId), eq(interviewReminders.status, "scheduled")));
+}
+
+export async function createNotification(input: { userId: number; type: string; title: string; body: string; href?: string | null; fingerprint: string; jobId?: number | null; applicationId?: number | null }) {
   const db = await requireDb();
   await db.insert(notifications).values(input).onDuplicateKeyUpdate({ set: { fingerprint: input.fingerprint } });
 }
@@ -242,6 +354,17 @@ export async function listNotifications(userId: number) {
 export async function markNotificationRead(userId: number, notificationId: number) {
   const db = await requireDb();
   await db.update(notifications).set({ readAt: new Date() }).where(and(eq(notifications.userId, userId), eq(notifications.id, notificationId)));
+}
+
+export async function markAllNotificationsRead(userId: number) {
+  const db = await requireDb();
+  await db.update(notifications).set({ readAt: new Date() }).where(and(eq(notifications.userId, userId), isNull(notifications.readAt), isNull(notifications.dismissedAt)));
+}
+
+export async function updateNotificationPreferences(userId: number, input: { highMatchNotificationsEnabled: boolean; applicationUpdatesEnabled: boolean; interviewRemindersEnabled: boolean; skillInsightsEnabled: boolean }) {
+  const db = await requireDb();
+  await db.update(candidateProfiles).set(input).where(eq(candidateProfiles.userId, userId));
+  return getCandidateProfile(userId);
 }
 
 export async function dismissNotification(userId: number, notificationId: number) {
