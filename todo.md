@@ -77,5 +77,7 @@
 - [ ] Add and run comprehensive focused tests for ingestion normalization/deduplication/lifecycle, admin RBAC, matching notifications, application notes/reminders, and protected APIs.
 - [ ] Complete an administrator edit surface for all candidate-facing job fields, bulk archive/unpublish controls, and server-backed review, publication, and source filters.
 - [ ] Add executable import lifecycle, review/publish transition, and scheduled reminder idempotency behavior tests beyond source-contract assertions.
-- [ ] Inspect the authenticated gulshanverse Git identity, configure repository-local author attribution without inventing an email, and safely correct the latest commit if the identity can be verified.
+- [x] Inspect the authenticated gulshanverse Git identity, configure repository-local author attribution without inventing an email, and safely correct the latest commit if the identity can be verified.
 - [ ] Re-run full technical, visual, security, remote-head, and Git-attribution verification; checkpoint and push the completed work.
+- [x] Verify the safe unconfigured provider path records an auditable failed import, leaves existing jobs unchanged, clearly reports no connected feed, and retains a configuration-ready provider boundary without external data.
+- [ ] Verify the Profile-triggered weekly digest activation after the user enables it on the published site, or record the user action as pending if the scheduler state is not yet observable.
