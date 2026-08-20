@@ -2,7 +2,7 @@
 
 > **Your resume. Your skills. Your career path.**
 
-Job Sarthi is an AI-assisted, profile-led career discovery platform. It helps candidates build a structured profile from their own preferences and resume content, browse stored opportunities, understand explainable job-fit signals, save roles, track application stages, and request career guidance grounded in their profile data and relevant job requirements.
+Job Sarthi is a full-stack, AI-powered, profile-led career discovery platform. It helps candidates build a structured profile from their own preferences and resume content, browse stored opportunities, understand explainable job-fit signals, save roles, track application stages, and request career guidance grounded in their profile data and relevant job requirements.
 
 ## Included capabilities
 
