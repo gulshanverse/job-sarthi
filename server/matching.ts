@@ -40,26 +40,30 @@ function textMatches(left: string, right: string) {
 const levels: Record<NonNullable<CandidateProfile["experienceLevel"]>, number> = { student: 0, entry: 1, mid: 2, senior: 3 };
 
 export function calculateRuleBasedMatch(profile: CandidateProfile, job: Job): MatchBreakdown {
-  const candidateSkills = new Map(profile.skills.map(skill => [skillKey(skill), normaliseSkill(skill)]));
+  const candidateSkills = new Map((profile.skills ?? []).map(skill => [skillKey(skill), normaliseSkill(skill)]));
   const requirements = job.requirements.map(skill => ({ label: normaliseSkill(skill), key: skillKey(skill) }));
   const matchingSkills = requirements.filter(skill => candidateSkills.has(skill.key)).map(skill => candidateSkills.get(skill.key) ?? skill.label);
   const missingSkills = requirements.filter(skill => !candidateSkills.has(skill.key)).map(skill => skill.label);
   const skillScore = requirements.length ? Math.round((matchingSkills.length / requirements.length) * MATCH_WEIGHTS.skills) : MATCH_WEIGHTS.skills;
 
-  const roleMatch = profile.desiredRoles.some(role => textMatches(role, job.title)) || textMatches(profile.headline ?? "", job.title);
+  const roleMatch = (profile.desiredRoles ?? []).some(role => textMatches(role, job.title)) || textMatches(profile.headline ?? "", job.title);
   const roleScore = roleMatch ? MATCH_WEIGHTS.role : 0;
 
-  const difference = Math.abs(levels[profile.experienceLevel] - levels[job.experienceLevel]);
+  const difference = Math.abs(levels[profile.experienceLevel ?? "entry"] - levels[job.experienceLevel]);
   const experienceScore = difference === 0 ? MATCH_WEIGHTS.experience : difference === 1 ? 10 : difference === 2 ? 4 : 0;
 
   const requiredEducation = job.requiredEducation?.trim() ?? "";
-  const educationText = profile.education.map(item => `${item.qualification} ${item.field ?? ""} ${item.institution}`).join(" ");
-  const educationScore = !requiredEducation ? MATCH_WEIGHTS.education : textMatches(educationText, requiredEducation) ? MATCH_WEIGHTS.education : profile.education.length ? 3 : 0;
+  const education = profile.education ?? [];
+  const educationText = education.map(item => `${item.qualification} ${item.field ?? ""} ${item.institution}`).join(" ");
+  const educationScore = !requiredEducation ? MATCH_WEIGHTS.education : textMatches(educationText, requiredEducation) ? MATCH_WEIGHTS.education : education.length ? 3 : 0;
 
-  const locationMatch = profile.desiredLocations.length === 0 || profile.desiredLocations.some(location => textMatches(location, job.location));
+  const desiredLocations = profile.desiredLocations ?? [];
+  const locationMatch = desiredLocations.length === 0 || desiredLocations.some(location => textMatches(location, job.location));
   const locationScore = locationMatch ? MATCH_WEIGHTS.location : 0;
-  const workMatch = profile.workPreference === "flexible" || profile.workPreference === job.workMode;
-  const employmentMatch = profile.employmentPreference === "both" || (profile.employmentPreference === "internship" && job.employmentType === "internship") || (profile.employmentPreference === "full_time" && job.employmentType === "full_time");
+  const workPreference = profile.workPreference ?? "flexible";
+  const employmentPreference = profile.employmentPreference ?? "both";
+  const workMatch = workPreference === "flexible" || workPreference === job.workMode;
+  const employmentMatch = employmentPreference === "both" || (employmentPreference === "internship" && job.employmentType === "internship") || (employmentPreference === "full_time" && job.employmentType === "full_time");
   const preferenceScore = workMatch && employmentMatch ? MATCH_WEIGHTS.preference : workMatch || employmentMatch ? 3 : 0;
   const score = skillScore + roleScore + experienceScore + educationScore + locationScore + preferenceScore;
 

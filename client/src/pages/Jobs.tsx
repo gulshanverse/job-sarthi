@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { trpc } from "@/lib/trpc";
 import { ChevronLeft, ChevronRight, Search, SlidersHorizontal } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 
 export default function Jobs() {
   const [query, setQuery] = useState(""); const [debouncedQuery, setDebouncedQuery] = useState(""); const [role, setRole] = useState(""); const [location, setLocation] = useState(""); const [skills, setSkills] = useState(""); const [category, setCategory] = useState(""); const [workMode, setWorkMode] = useState<"all" | "remote" | "hybrid" | "onsite">("all"); const [employmentType, setEmploymentType] = useState<"all" | "internship" | "full_time">("all"); const [experience, setExperience] = useState<"all" | "student" | "entry" | "mid" | "senior">("all"); const [sort, setSort] = useState<"latest" | "title">("latest"); const [page, setPage] = useState(1);

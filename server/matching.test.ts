@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { CandidateProfile, Job } from "../drizzle/schema";
-import { calculateRuleBasedMatch } from "./matching";
+import { calculateRuleBasedMatch, createMatchExplanation } from "./matching";
 
 const profile = {
   desiredRoles: ["Frontend Developer"],
@@ -31,5 +31,13 @@ describe("calculateRuleBasedMatch", () => {
     expect(match.roleMatch).toBe(true);
     expect(match.locationMatch).toBe(true);
   });
-});
 
+  it("returns a bounded, explainable score for a legacy partial profile", () => {
+    const partialProfile = { headline: null } as CandidateProfile;
+    const match = calculateRuleBasedMatch(partialProfile, job);
+    expect(match.score).toBeGreaterThanOrEqual(0);
+    expect(match.score).toBeLessThanOrEqual(100);
+    expect(match.missingSkills).toEqual(["React", "TypeScript", "Node.js"]);
+    expect(createMatchExplanation(match, job)).toContain("Skills");
+  });
+});

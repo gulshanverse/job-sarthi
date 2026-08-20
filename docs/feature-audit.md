@@ -1,37 +1,37 @@
-# Job Sarthi Production Audit
+# Job Sarthi Production-Polish Audit
 
-**Audit basis:** source-code inspection of the React client, tRPC routers, Drizzle schema, storage-backed resume workflow, matching service, server bootstrap, package scripts, and current documentation.
+**Audit basis:** source-code review, schema migration review, server and client type checking, authenticated desktop/mobile/tablet workspace captures, and review of the managed deployment constraints.
 
 ## Verified implementation status
 
-| Area | Status | Evidence and observed gap |
+| Area | Status | Current evidence and boundary |
 | --- | --- | --- |
-| Public landing page | Complete | A branded, responsive landing page contains value proposition, dual calls to action, workflow explanation, feature sections, and footer. It does not present fabricated testimonials, ratings, or employer logos. |
-| Authentication and access control | Complete within the platform model | Manus OAuth supplies identity and server-side protected procedures guard candidate APIs. This application deliberately does **not** implement password registration, password validation, or password hashing because credentials are managed by the OAuth provider. |
-| Candidate onboarding | Partial | Role goals, locations, work mode, employment preference, experience level, skills, experience, education, resume upload, and confirmation are persisted. Profile completion and richer contact/project/certification review are not yet modeled. |
-| Resume upload and storage | Partial | PDF and DOCX uploads are size-limited, stored through the private storage integration, and processed server-side. The user experience lacks extension/empty-file/duplicate checks, a persisted retry flow, and clearer processing outcomes. |
-| Resume extraction | Partial | Server-side LLM extraction returns headline, target roles, skills, experience, and education without intentionally inventing data. Personal-contact, projects, certifications, explicit section parsing, and central skill normalization are absent. |
-| Profile editing | Partial | Candidates can review and edit core profile, preferences, skills, experience, and education. Projects, certifications, contact details, and completion guidance are missing. |
-| Job system and search | Partial | Stored jobs support title, company, location, work mode, type, level, salary, description, requirements, nice-to-have skills, and application URLs. Current filtering is server-side but materializes all jobs before filtering; category, skills, salary, and sort controls are incomplete. |
-| Job detail and external apply | Partial | Detail, save, tracker, and external application actions exist. Applying externally is not falsely marked as submitted, but the post-application lifecycle needs clearer labels and status help. |
-| Recommendations | Partial | Recommendations use the confirmed profile and stored jobs; matching and missing skills are shown. The current fallback scoring does not provide the required centralized per-factor weight breakdown, and recommendation filtering/grouping is limited. |
-| Saved jobs and applications | Partial | Unique database constraints prevent duplicate saved jobs and applications. The tracker supports saved, applied, interviewing, offer, and rejected; richer lifecycle language, synchronization feedback, and notifications are missing. |
-| Dashboard and insights | Partial | The dashboard has a protected next-action card, basic profile signal, and recommendation preview. Its profile-completion calculation and next-action rules are intentionally lightweight; it lacks applications, notification, and data-driven skill-frequency summaries. |
-| Notifications and automation | Missing | No notification table, event service, scheduled callback, digest architecture, or mounted `/api/scheduled/*` handler exists. |
-| Admin job management | Missing | The current `admin` role exists but has no admin-only job ingestion or management surface. |
-| Accessibility and responsive UX | Partial | The interface has semantic controls, labels, protected states, loading/empty/error patterns, and visual checks at several sizes. A full keyboard, focus, command-palette, and broad breakpoint audit is still required. |
-| Security and configuration | Partial | Secrets are not committed, populated environment files are ignored, APIs use validation and protected procedures, and resumes are stored privately. Rate limiting, security headers, and a credential-free `.env.example` cannot be added directly under this managed environment; safe environment guidance exists in `docs/environment.md`. |
-| Tests and verification | Partial | Existing tests cover logout, protected-route denial, input validation, and rule-based matching. Coverage needs expansion across resume validation, profile persistence, scoring dimensions, filters, saves, applications, notifications, and automation. |
+| Authentication and access control | Implemented | Manus OAuth manages identity. Candidate APIs use `protectedProcedure`; job operations use `adminProcedure`; candidate data is never rendered by the admin page. Password flows are intentionally outside this OAuth-based application. |
+| Candidate data and review | Implemented | Profiles retain contact details, preferences, skills, experience, education, projects, certifications, profile confirmation, and candidate-controlled review. |
+| Resume privacy and resilience | Implemented | Private storage metadata, PDF/DOCX extension and signature checks, a 5 MB server limit, SHA-256 duplicate detection, measurable client file-read progress, structured processing states, and retry handling are present. |
+| Explainable relevance | Implemented | A centralized 100-point score combines skills (45), role direction (20), experience (15), education (10), location (5), and preferences (5). The LLM only turns grounded results into readable explanations. |
+| Jobs and details | Implemented | Active jobs are queried with server-side parameterized search, filters, sorting, counting, and pagination. Detail pages expose available metadata and preserve the candidate-controlled external-application sequence. |
+| Saved jobs and applications | Implemented | Unique persistence guards duplicates. The saved query invalidates after a shared job-card save action. Candidate stages include saved, applied, under review, interviewing, offer, selected, and rejected. |
+| Dashboard and career insights | Implemented | Dashboard next actions and completion evidence use actual profile, application, recommendation, and skill-gap query data. Career frequency evidence narrows to selected recommended jobs when chosen. |
+| Notifications | Implemented | A candidate-private inbox lists, marks read, and dismisses meaningful profile, resume, high-match, and application-milestone events. `(userId, fingerprint)` prevents duplicate event rows. |
+| Event refresh and scheduling | Implemented, deployment activation pending | Confirmed profile updates refresh recommendations. Newly active admin-published jobs are rule-evaluated against confirmed profiles without admin access to profile data. A task-UID keyed, cron-authenticated weekly in-app digest callback is mounted, but must be enabled only after publishing. |
+| Admin job management | Implemented | The role-gated `/admin/jobs` route supports verified job creation and status updates. Active roles are evaluated privately; this is not a candidate-data dashboard. |
+| Responsive and accessible UX | Implemented | Authenticated layouts were captured at desktop, 768 px tablet, and 375 px mobile. The sidebar, command navigation, notification menu, labels, focusable controls, loading, empty, and error states remain usable at these viewports. |
 
-## Priority completion sequence
+## Performance and data-flow evidence
 
-1. Make resume-derived profile data richer, normalized, reviewable, and visibly complete.
-2. Replace the coarse fallback match score with a centralized, explainable weighted relevance model and use it across recommendations.
-3. Complete truthful job actions, application lifecycle, dashboard next steps, and relevant skill-gap insight.
-4. Add private in-app notifications and event-driven refreshes before introducing recurring digest delivery.
-5. Add a minimal protected job-ingestion route for admins, then validate the full candidate flow with actual stored jobs rather than fabricated UI data.
-6. Expand test coverage, keyboard/responsive review, documentation, and final release verification.
+The jobs browser debounces keyword changes and uses server-side filters, sort order, `count(*)`, `LIMIT`, and `OFFSET`; it does not download an unbounded job collection and filter it in the browser. Recommendation generation evaluates a bounded active-job slice, while candidate weekly digest and notification queries have explicit limits. Client mutations invalidate targeted tRPC queries rather than running polling loops. The deployed workload contains no in-process timer, `setInterval`, or `node-cron` dependency.
 
-## Architectural boundaries
+## Focused accessibility verification
 
-The application uses **React, Express, tRPC, Drizzle, MySQL-compatible storage, Manus OAuth, private object storage, and a server-side LLM integration**. The audit and follow-up work retain this architecture. Password-based login, MongoDB-specific controls, unverified email delivery, fake job data, fake job applications, and fabricated user-generated content are outside the shipped scope unless a supported integration and real data source are configured.
+The protected shell exposes a visible command-navigation trigger on supported widths and a `⌘K` / `Ctrl+K` keyboard shortcut. Its command dialog presents labeled workspace destinations and only includes the admin destination for an admin session. The notification trigger has a dynamic accessible label, while the read and dismiss controls have explicit labels and remain regular keyboard-focusable buttons. Candidate routes use labeled form controls and route-specific loading, retry, error, and empty states. The tablet and mobile captures confirm that the compact shell preserves the notification affordance while the full sidebar and command trigger remain available at tablet and desktop widths.
+
+The focused Vitest/jsdom pass executes the protected-shell keyboard path rather than only inspecting source: `Tab` moves focus to the command trigger, `Ctrl+K` focuses the command input, the focused trigger matches `:focus-visible`, the admin destination is present only in an admin configuration, and selecting it closes the dialog before navigation. The notification pass tabs to the dynamic-label trigger, opens it from the keyboard, confirms the actionable control can receive DOM focus, and invokes its labeled **Mark as read** and **Dismiss notification** controls. Notification actions now carry explicit focus-visible rings; shared buttons supply focus-visible rings for command, pagination, and admin controls. The browser tests also prove a candidate receives the admin-access boundary while an administrator receives publishing controls.
+
+The rendered job-detail test verifies visible employer, compensation, and education metadata plus save, tracking, external open, and post-submission actions. The jobs-browser test verifies that a keyword waits for its 320 ms debounce, each filter resets pagination, and active keyword and role filters persist when the user advances to the next page. Server-level tests cover strict protected-procedure, invalid-input, secure resume-file, matching, selected-job skill-gap, and shared saved-role synchronization contracts.
+
+> No synthetic job listings, external-application submissions, user testimonials, or candidate-private admin data are used to make the experience appear more complete than its stored data supports.
+
+## Remaining validation and deployment actions
+
+The remaining work is final validation and release: continue targeted coverage for jobs and career-insight data flows, run the full test/type-check/build suite, review the final Git diff, and create the release checkpoint. Once the published site is reachable, a confirmed candidate can enable the weekly in-app digest from Profile and the cron callback can be tested end-to-end.

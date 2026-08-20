@@ -43,18 +43,27 @@
 - [x] Improve job records and browsing with safe, debounced search, relevant filters and sorting, pagination, and truthful job-detail actions.
 - [x] Complete the job-detail view with expanded metadata and truthful external-application follow-up actions.
 - [x] Display relevant job publication status on the detail page without cluttering the active-role experience.
-- [ ] Add focused verification for job-detail metadata, save and tracking actions, and the truthful external-application flow.
-- [ ] Verify job-detail, debounced search, filtered pagination, save, track, and external apply contracts.
+- [x] Add focused verification for job-detail metadata, save and tracking actions, and the truthful external-application flow.
+- [x] Verify job-detail, debounced search, filtered pagination, save, track, and external apply contracts.
 - [x] Complete saved-job synchronization and application tracking with clear lifecycle stages, duplicate prevention, and a truthful external-application flow.
 - [x] Build data-driven dashboard next actions, profile completion, selected-job skill-gap frequency insights, and recommendation views.
 - [x] Synchronize the dedicated Saved Jobs query when bookmarks are removed from any reusable job card surface.
 - [x] Scope skill-gap frequency evidence to the user-selected recommended-job context in Career Insights.
-- [ ] Add focused verification for saved-role synchronization and selected-job skill-gap frequency behavior.
+- [x] Add focused verification for saved-role synchronization and selected-job skill-gap frequency behavior.
 - [x] Add in-app, readable, dismissible notifications with duplicate prevention for profile, resume, application, and high-match events.
 - [x] Implement event-driven recommendation refreshes and a safe periodic digest architecture through supported scheduled infrastructure.
 - [x] Add protected admin job-management capabilities only where they improve real job ingestion and never expose candidate-private data.
 - [ ] Publish the updated site and then enable or test the deployment-gated weekly digest schedule from the Profile workspace.
-- [ ] Audit and improve loading, empty, error, accessibility, mobile/tablet/desktop, performance, and command-navigation experiences.
-- [ ] Expand unit and integration coverage for resume validation, profiles, matching and ranking, jobs, saves, applications, notifications, and protected APIs.
-- [ ] Update README and safe environment documentation to match only the shipped architecture, automation, testing, and deployment behavior.
-- [ ] Run comprehensive verification, inspect final Git changes and security hygiene, commit the production-polish work, push to GitHub, and verify the remote head.
+- [x] Audit and improve loading, empty, error, accessibility, mobile/tablet/desktop, performance, and command-navigation experiences.
+- [x] Expand unit and integration coverage for resume validation, profiles, matching and ranking, jobs, saves, applications, notifications, and protected APIs.
+- [x] Update README and safe environment documentation to match only the shipped architecture, automation, testing, and deployment behavior.
+- [x] Verify protected workspace behavior at a tablet viewport after the latest shell, notification, and command-navigation changes.
+- [x] Document production performance evidence and keep the critical candidate views on paginated, debounced, server-filtered data paths.
+- [x] Complete and document focused keyboard, focus, command-navigation, notification-menu, and admin-access accessibility verification.
+- [x] Capture concrete debounced-search and bounded-query performance evidence for the protected workspace.
+- [x] Add executable verification for admin-only job-management access and command-navigation accessibility semantics.
+- [x] Execute and record a focused protected-workspace keyboard and focus QA pass.
+- [ ] Add and run browser-level interaction tests for command navigation, notification controls, visible focus flow, and role-gated admin access.
+- [x] Add executed UI verification for debounced job search, retained filters, and filter-driven pagination resets.
+- [ ] Verify visible focus indicators on protected-workspace command, notification, pagination, and admin controls.
+- [x] Run comprehensive verification, inspect final Git changes and security hygiene, commit the production-polish work, push to GitHub, and verify the remote head.

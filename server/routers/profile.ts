@@ -39,7 +39,7 @@ function cleanName(name: string) {
   return name.replace(/[^a-zA-Z0-9._-]/g, "_").slice(-180) || "resume";
 }
 
-function validateResumeFile(name: string, mimeType: string, buffer: Buffer) {
+export function validateResumeFile(name: string, mimeType: string, buffer: Buffer) {
   const extension = name.toLowerCase().split(".").pop();
   const isPdf = mimeType === "application/pdf" && extension === "pdf";
   const isDocx = mimeType === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" && extension === "docx";

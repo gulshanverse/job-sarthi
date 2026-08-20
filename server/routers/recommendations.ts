@@ -6,6 +6,26 @@ import { protectedProcedure, router } from "../_core/trpc";
 import { skillKey } from "../skills";
 import { refreshRecommendationsForUser } from "../recommendationRefresh";
 
+type SkillGapRecommendation = { job: { id: number; requirements: string[] } };
+
+export function calculateSkillGapFrequencies(profileSkills: string[], recommendations: SkillGapRecommendation[], requestedIds: number[]) {
+  const knownSkills = new Set(profileSkills.map(skillKey));
+  const allowedIds = new Set(recommendations.map(item => item.job.id));
+  const selectedIds = requestedIds.filter(id => allowedIds.has(id));
+  const context = selectedIds.length ? recommendations.filter(item => selectedIds.includes(item.job.id)) : recommendations.slice(0, 8);
+  const counts = new Map<string, { skill: string; count: number }>();
+  for (const item of context) {
+    for (const requirement of item.job.requirements) {
+      const key = skillKey(requirement);
+      if (knownSkills.has(key)) continue;
+      const current = counts.get(key) ?? { skill: requirement, count: 0 };
+      current.count += 1;
+      counts.set(key, current);
+    }
+  }
+  return Array.from(counts.values()).sort((a, b) => b.count - a.count || a.skill.localeCompare(b.skill)).slice(0, 6);
+}
+
 export const recommendationsRouter = router({
   list: protectedProcedure.query(async ({ ctx }) => {
     const savedIds = new Set(await getSavedJobIds(ctx.user.id));
@@ -22,22 +42,8 @@ export const recommendationsRouter = router({
   skillGapFrequencies: protectedProcedure.input(z.object({ jobIds: z.array(z.number().int().positive()).max(8).default([]) })).query(async ({ ctx, input }) => {
     const profile = await getCandidateProfile(ctx.user.id);
     if (!profile?.profileConfirmed) return [];
-    const profileSkills = new Set(profile.skills.map(skillKey));
-    const counts = new Map<string, { skill: string; count: number }>();
     const recommendations = await listRecommendations(ctx.user.id);
-    const allowedIds = new Set(recommendations.map(item => item.job.id));
-    const selectedIds = input.jobIds.filter(id => allowedIds.has(id));
-    const context = selectedIds.length ? recommendations.filter(item => selectedIds.includes(item.job.id)) : recommendations.slice(0, 8);
-    for (const item of context) {
-      for (const requirement of item.job.requirements) {
-        const key = skillKey(requirement);
-        if (profileSkills.has(key)) continue;
-        const current = counts.get(key) ?? { skill: requirement, count: 0 };
-        current.count += 1;
-        counts.set(key, current);
-      }
-    }
-    return Array.from(counts.values()).sort((a, b) => b.count - a.count || a.skill.localeCompare(b.skill)).slice(0, 6);
+    return calculateSkillGapFrequencies(profile.skills, recommendations, input.jobIds);
   }),
   generateInsight: protectedProcedure.input(z.object({ jobIds: z.array(z.number().int().positive()).max(8).default([]) })).mutation(async ({ ctx, input }) => {
     const profile = await getCandidateProfile(ctx.user.id);

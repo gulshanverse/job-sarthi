@@ -2,7 +2,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { trpc } from "@/lib/trpc";
 import { ArrowLeft, Bookmark, BookmarkCheck, Building2, CalendarClock, CheckCircle2, ClipboardPlus, ExternalLink, GraduationCap, MapPin } from "lucide-react";
-import { useState } from "react";
+import React, { useState } from "react";
 import { toast } from "sonner";
 import { useLocation, useRoute } from "wouter";
 
