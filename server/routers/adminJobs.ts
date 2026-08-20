@@ -102,4 +102,8 @@ export const adminJobsRouter = router({
     const results = await Promise.all(input.jobIds.map(jobId => reviewImportedJob(jobId, ctx.user.id, input)));
     return { requested: input.jobIds.length, updated: results.filter(Boolean).length };
   }),
+  bulkSetStatus: adminProcedure.input(z.object({ jobIds: z.array(z.number().int().positive()).min(1).max(100), status: z.enum(["paused", "closed", "archived"]) })).mutation(async ({ input }) => {
+    const results = await Promise.all(input.jobIds.map(jobId => updateJobStatus(jobId, input.status)));
+    return { requested: input.jobIds.length, updated: results.filter(Boolean).length };
+  }),
 });

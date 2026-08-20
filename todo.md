@@ -63,9 +63,9 @@
 - [x] Capture concrete debounced-search and bounded-query performance evidence for the protected workspace.
 - [x] Add executable verification for admin-only job-management access and command-navigation accessibility semantics.
 - [x] Execute and record a focused protected-workspace keyboard and focus QA pass.
-- [ ] Add and run browser-level interaction tests for command navigation, notification controls, visible focus flow, and role-gated admin access.
+- [x] Add and run browser-level interaction tests for command navigation, notification controls, visible focus flow, and role-gated admin access.
 - [x] Add executed UI verification for debounced job search, retained filters, and filter-driven pagination resets.
-- [ ] Verify visible focus indicators on protected-workspace command, notification, pagination, and admin controls.
+- [x] Verify visible focus indicators on protected-workspace command, notification, pagination, and admin controls.
 - [x] Run comprehensive verification, inspect final Git changes and security hygiene, commit the production-polish work, push to GitHub, and verify the remote head.
 - [x] Audit the supplied implementation specification against the existing database, routes, jobs, recommendations, notifications, applications, scheduling, UI, tests, and Git history.
 - [x] Define and document the verified-feed provider abstraction, job ingestion lifecycle, source metadata, duplicate identity, review states, and error boundaries without fabricating external jobs.
