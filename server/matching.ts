@@ -1,37 +1,76 @@
 import type { CandidateProfile, Job } from "../drizzle/schema";
+import { normaliseSkill, skillKey } from "./skills";
 
-const normalise = (value: string) => value.trim().toLowerCase();
+export const MATCH_WEIGHTS = {
+  skills: 45,
+  role: 20,
+  experience: 15,
+  education: 10,
+  location: 5,
+  preference: 5,
+} as const;
 
 export type MatchBreakdown = {
   score: number;
+  skillScore: number;
+  roleScore: number;
+  experienceScore: number;
+  educationScore: number;
+  locationScore: number;
+  preferenceScore: number;
   matchingSkills: string[];
   missingSkills: string[];
   roleMatch: boolean;
   locationMatch: boolean;
 };
 
-export function calculateRuleBasedMatch(profile: CandidateProfile, job: Job): MatchBreakdown {
-  const candidateSkills = new Map(profile.skills.map(skill => [normalise(skill), skill]));
-  const requiredSkills = job.requirements.map(normalise);
-  const matchingSkills = requiredSkills
-    .filter(skill => candidateSkills.has(skill))
-    .map(skill => candidateSkills.get(skill) ?? skill);
-  const missingSkills = job.requirements.filter(skill => !candidateSkills.has(normalise(skill)));
-  const skillScore = requiredSkills.length
-    ? Math.round((matchingSkills.length / requiredSkills.length) * 65)
-    : 42;
-  const desiredRoles = profile.desiredRoles.map(normalise);
-  const roleMatch = desiredRoles.some(role => normalise(job.title).includes(role) || role.includes(normalise(job.title)));
-  const locationMatch = profile.desiredLocations.length === 0 || profile.desiredLocations.some(
-    location => normalise(job.location).includes(normalise(location)) || normalise(location).includes(normalise(job.location)),
-  );
-  const workMatch = profile.workPreference === "flexible" || profile.workPreference === job.workMode;
-  const employmentMatch = profile.employmentPreference === "both" ||
-    (profile.employmentPreference === "internship" && job.employmentType === "internship") ||
-    (profile.employmentPreference === "full_time" && job.employmentType === "full_time");
-  const levelMatch = profile.experienceLevel === job.experienceLevel ||
-    (profile.experienceLevel === "student" && job.experienceLevel === "entry");
-  const score = Math.min(100, skillScore + (roleMatch ? 17 : 4) + (locationMatch ? 7 : 0) + (workMatch ? 6 : 0) + (employmentMatch ? 3 : 0) + (levelMatch ? 2 : 0));
+function words(value: string) {
+  return value.toLowerCase().split(/[^a-z0-9+#.]+/).filter(token => token.length > 2);
+}
 
-  return { score, matchingSkills, missingSkills, roleMatch, locationMatch };
+function textMatches(left: string, right: string) {
+  const normalizedLeft = left.trim().toLowerCase();
+  const normalizedRight = right.trim().toLowerCase();
+  if (!normalizedLeft || !normalizedRight) return false;
+  if (normalizedLeft.includes(normalizedRight) || normalizedRight.includes(normalizedLeft)) return true;
+  const rightWords = new Set(words(normalizedRight));
+  return words(normalizedLeft).some(word => rightWords.has(word));
+}
+
+const levels: Record<NonNullable<CandidateProfile["experienceLevel"]>, number> = { student: 0, entry: 1, mid: 2, senior: 3 };
+
+export function calculateRuleBasedMatch(profile: CandidateProfile, job: Job): MatchBreakdown {
+  const candidateSkills = new Map(profile.skills.map(skill => [skillKey(skill), normaliseSkill(skill)]));
+  const requirements = job.requirements.map(skill => ({ label: normaliseSkill(skill), key: skillKey(skill) }));
+  const matchingSkills = requirements.filter(skill => candidateSkills.has(skill.key)).map(skill => candidateSkills.get(skill.key) ?? skill.label);
+  const missingSkills = requirements.filter(skill => !candidateSkills.has(skill.key)).map(skill => skill.label);
+  const skillScore = requirements.length ? Math.round((matchingSkills.length / requirements.length) * MATCH_WEIGHTS.skills) : MATCH_WEIGHTS.skills;
+
+  const roleMatch = profile.desiredRoles.some(role => textMatches(role, job.title)) || textMatches(profile.headline ?? "", job.title);
+  const roleScore = roleMatch ? MATCH_WEIGHTS.role : 0;
+
+  const difference = Math.abs(levels[profile.experienceLevel] - levels[job.experienceLevel]);
+  const experienceScore = difference === 0 ? MATCH_WEIGHTS.experience : difference === 1 ? 10 : difference === 2 ? 4 : 0;
+
+  const requiredEducation = job.requiredEducation?.trim() ?? "";
+  const educationText = profile.education.map(item => `${item.qualification} ${item.field ?? ""} ${item.institution}`).join(" ");
+  const educationScore = !requiredEducation ? MATCH_WEIGHTS.education : textMatches(educationText, requiredEducation) ? MATCH_WEIGHTS.education : profile.education.length ? 3 : 0;
+
+  const locationMatch = profile.desiredLocations.length === 0 || profile.desiredLocations.some(location => textMatches(location, job.location));
+  const locationScore = locationMatch ? MATCH_WEIGHTS.location : 0;
+  const workMatch = profile.workPreference === "flexible" || profile.workPreference === job.workMode;
+  const employmentMatch = profile.employmentPreference === "both" || (profile.employmentPreference === "internship" && job.employmentType === "internship") || (profile.employmentPreference === "full_time" && job.employmentType === "full_time");
+  const preferenceScore = workMatch && employmentMatch ? MATCH_WEIGHTS.preference : workMatch || employmentMatch ? 3 : 0;
+  const score = skillScore + roleScore + experienceScore + educationScore + locationScore + preferenceScore;
+
+  return { score, skillScore, roleScore, experienceScore, educationScore, locationScore, preferenceScore, matchingSkills, missingSkills, roleMatch, locationMatch };
+}
+
+export function createMatchExplanation(match: MatchBreakdown, job: Job) {
+  const skillSentence = job.requirements.length
+    ? match.matchingSkills.length ? `Your ${match.matchingSkills.join(", ")} skills match ${match.matchingSkills.length} of ${job.requirements.length} core requirement${job.requirements.length === 1 ? "" : "s"}.` : `This role lists ${job.requirements.length} core skill requirement${job.requirements.length === 1 ? "" : "s"} that are not yet in your profile.`
+    : "This role does not list core skill requirements, so the match relies on your stated direction and preferences.";
+  const fitSentence = [match.roleScore ? "Your target role aligns with the title." : "The title is outside your stated role direction.", match.locationScore ? "Location aligns with your preferences." : "Location does not align with your preferences.", match.preferenceScore ? "Work and employment preferences align." : "Work or employment preferences differ."].join(" ");
+  const gapSentence = match.missingSkills.length ? `Skills to review: ${match.missingSkills.join(", ")}.` : "No listed core skills are missing from your profile.";
+  return `${skillSentence} ${fitSentence} ${gapSentence}`;
 }

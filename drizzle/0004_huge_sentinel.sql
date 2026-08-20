@@ -1,0 +1,1 @@
+ALTER TABLE `resumes` MODIFY COLUMN `fileHash` varchar(64);

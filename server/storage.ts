@@ -95,3 +95,10 @@ export async function storageGetSignedUrl(relKey: string): Promise<string> {
   const { url } = (await resp.json()) as { url: string };
   return url;
 }
+
+export async function storageGetBuffer(relKey: string): Promise<Buffer> {
+  const url = await storageGetSignedUrl(relKey);
+  const response = await fetch(url);
+  if (!response.ok) throw new Error(`Storage download failed (${response.status})`);
+  return Buffer.from(await response.arrayBuffer());
+}

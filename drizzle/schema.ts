@@ -22,6 +22,20 @@ export type EducationItem = {
   institution: string;
   qualification: string;
   year: string;
+  field?: string;
+  score?: string;
+};
+
+export type ProjectItem = {
+  title: string;
+  description: string;
+  technologies: string[];
+};
+
+export type CertificationItem = {
+  name: string;
+  issuer: string;
+  year: string;
 };
 
 export const users = mysqlTable("users", {
@@ -41,6 +55,12 @@ export const candidateProfiles = mysqlTable(
   {
     id: int("id").autoincrement().primaryKey(),
     userId: int("userId").notNull(),
+    fullName: varchar("fullName", { length: 180 }).default("").notNull(),
+    email: varchar("email", { length: 320 }),
+    phone: varchar("phone", { length: 40 }),
+    currentLocation: varchar("currentLocation", { length: 180 }),
+    linkedInUrl: varchar("linkedInUrl", { length: 500 }),
+    githubUrl: varchar("githubUrl", { length: 500 }),
     headline: varchar("headline", { length: 180 }).default(""),
     bio: text("bio"),
     desiredRoles: json("desiredRoles").$type<string[]>().notNull(),
@@ -57,8 +77,13 @@ export const candidateProfiles = mysqlTable(
     skills: json("skills").$type<string[]>().notNull(),
     experience: json("experience").$type<ExperienceItem[]>().notNull(),
     education: json("education").$type<EducationItem[]>().notNull(),
+    projects: json("projects").$type<ProjectItem[]>(),
+    certifications: json("certifications").$type<CertificationItem[]>(),
     profileConfirmed: boolean("profileConfirmed").default(false).notNull(),
     onboardingStep: int("onboardingStep").default(0).notNull(),
+    weeklyDigestEnabled: boolean("weeklyDigestEnabled").default(false).notNull(),
+    weeklyDigestCronTaskUid: varchar("weeklyDigestCronTaskUid", { length: 65 }),
+    weeklyDigestLastSentAt: timestamp("weeklyDigestLastSentAt"),
     createdAt: timestamp("createdAt").defaultNow().notNull(),
     updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   },
@@ -75,13 +100,16 @@ export const resumes = mysqlTable(
     storageKey: varchar("storageKey", { length: 500 }).notNull(),
     storageUrl: varchar("storageUrl", { length: 700 }).notNull(),
     sizeBytes: int("sizeBytes").notNull(),
+    fileHash: varchar("fileHash", { length: 64 }),
     status: mysqlEnum("status", ["uploaded", "processing", "ready", "failed"])
       .default("uploaded")
       .notNull(),
     extraction: json("extraction").$type<Record<string, unknown>>(),
+    failureReason: varchar("failureReason", { length: 500 }),
+    processedAt: timestamp("processedAt"),
     createdAt: timestamp("createdAt").defaultNow().notNull(),
   },
-  table => [index("resumes_user_idx").on(table.userId)],
+  table => [index("resumes_user_idx").on(table.userId), uniqueIndex("resumes_user_hash_unique").on(table.userId, table.fileHash)],
 );
 
 export const jobs = mysqlTable(
@@ -97,9 +125,14 @@ export const jobs = mysqlTable(
       .notNull(),
     salaryRange: varchar("salaryRange", { length: 100 }),
     description: text("description").notNull(),
+    responsibilities: json("responsibilities").$type<string[]>(),
     requirements: json("requirements").$type<string[]>().notNull(),
     niceToHave: json("niceToHave").$type<string[]>().notNull(),
+    category: varchar("category", { length: 120 }),
+    requiredEducation: varchar("requiredEducation", { length: 180 }),
     applicationUrl: varchar("applicationUrl", { length: 500 }),
+    deadline: timestamp("deadline"),
+    status: mysqlEnum("status", ["active", "paused", "closed"]).default("active").notNull(),
     postedAt: timestamp("postedAt").defaultNow().notNull(),
     createdAt: timestamp("createdAt").defaultNow().notNull(),
   },
@@ -123,7 +156,7 @@ export const applications = mysqlTable(
     id: int("id").autoincrement().primaryKey(),
     userId: int("userId").notNull(),
     jobId: int("jobId").notNull(),
-    status: mysqlEnum("status", ["saved", "applied", "interviewing", "offer", "rejected"])
+    status: mysqlEnum("status", ["saved", "applied", "under_review", "interviewing", "offer", "selected", "rejected"])
       .default("saved")
       .notNull(),
     notes: text("notes"),
@@ -140,6 +173,12 @@ export const recommendations = mysqlTable(
     userId: int("userId").notNull(),
     jobId: int("jobId").notNull(),
     score: int("score").notNull(),
+    skillScore: int("skillScore").default(0).notNull(),
+    roleScore: int("roleScore").default(0).notNull(),
+    experienceScore: int("experienceScore").default(0).notNull(),
+    educationScore: int("educationScore").default(0).notNull(),
+    locationScore: int("locationScore").default(0).notNull(),
+    preferenceScore: int("preferenceScore").default(0).notNull(),
     explanation: text("explanation").notNull(),
     matchingSkills: json("matchingSkills").$type<string[]>().notNull(),
     missingSkills: json("missingSkills").$type<string[]>().notNull(),
@@ -163,6 +202,23 @@ export const careerInsights = mysqlTable(
     generatedAt: timestamp("generatedAt").defaultNow().notNull(),
   },
   table => [index("career_insights_user_idx").on(table.userId)],
+);
+
+export const notifications = mysqlTable(
+  "notifications",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    userId: int("userId").notNull(),
+    type: varchar("type", { length: 80 }).notNull(),
+    title: varchar("title", { length: 180 }).notNull(),
+    body: text("body").notNull(),
+    href: varchar("href", { length: 300 }),
+    fingerprint: varchar("fingerprint", { length: 180 }).notNull(),
+    readAt: timestamp("readAt"),
+    dismissedAt: timestamp("dismissedAt"),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+  },
+  table => [index("notifications_user_idx").on(table.userId), uniqueIndex("notifications_user_fingerprint_unique").on(table.userId, table.fingerprint)],
 );
 
 export type User = typeof users.$inferSelect;

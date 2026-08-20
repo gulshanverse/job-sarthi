@@ -15,6 +15,62 @@
       "when": 1787242420296,
       "tag": "0001_parched_falcon",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1787246020369,
+      "tag": "0002_cultured_vapor",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "5",
+      "when": 1787246117274,
+      "tag": "0003_rare_tusk",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "5",
+      "when": 1787246161898,
+      "tag": "0004_huge_sentinel",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "5",
+      "when": 1787246488782,
+      "tag": "0005_aspiring_praxagora",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "5",
+      "when": 1787246611978,
+      "tag": "0006_fearless_steve_rogers",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "5",
+      "when": 1787247159587,
+      "tag": "0007_complex_toad",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "5",
+      "when": 1787247546581,
+      "tag": "0008_curvy_blue_shield",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "5",
+      "when": 1787247847165,
+      "tag": "0009_sad_dragon_man",
+      "breakpoints": true
     }
   ]
 }

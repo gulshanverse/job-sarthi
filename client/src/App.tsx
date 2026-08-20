@@ -13,6 +13,8 @@ import NotFound from "@/pages/NotFound";
 import Onboarding from "@/pages/Onboarding";
 import Profile from "@/pages/Profile";
 import Recommendations from "@/pages/Recommendations";
+import SavedJobs from "@/pages/SavedJobs";
+import AdminJobs from "@/pages/AdminJobs";
 import { Route, Switch } from "wouter";
 
 const SecureDashboard = () => <DashboardLayout><Dashboard /></DashboardLayout>;
@@ -23,9 +25,11 @@ const SecureJobDetail = () => <DashboardLayout><JobDetail /></DashboardLayout>;
 const SecureRecommendations = () => <DashboardLayout><Recommendations /></DashboardLayout>;
 const SecureApplications = () => <DashboardLayout><Applications /></DashboardLayout>;
 const SecureCareerInsights = () => <DashboardLayout><CareerInsights /></DashboardLayout>;
+const SecureSavedJobs = () => <DashboardLayout><SavedJobs /></DashboardLayout>;
+const SecureAdminJobs = () => <DashboardLayout><AdminJobs /></DashboardLayout>;
 
 function Router() {
-  return <Switch><Route path="/" component={Home} /><Route path="/dashboard" component={SecureDashboard} /><Route path="/onboarding" component={SecureOnboarding} /><Route path="/profile" component={SecureProfile} /><Route path="/recommendations" component={SecureRecommendations} /><Route path="/insights" component={SecureCareerInsights} /><Route path="/applications" component={SecureApplications} /><Route path="/jobs/:id" component={SecureJobDetail} /><Route path="/jobs" component={SecureJobs} /><Route path="/404" component={NotFound} /><Route component={NotFound} /></Switch>;
+  return <Switch><Route path="/" component={Home} /><Route path="/dashboard" component={SecureDashboard} /><Route path="/onboarding" component={SecureOnboarding} /><Route path="/profile" component={SecureProfile} /><Route path="/recommendations" component={SecureRecommendations} /><Route path="/insights" component={SecureCareerInsights} /><Route path="/saved" component={SecureSavedJobs} /><Route path="/applications" component={SecureApplications} /><Route path="/admin/jobs" component={SecureAdminJobs} /><Route path="/jobs/:id" component={SecureJobDetail} /><Route path="/jobs" component={SecureJobs} /><Route path="/404" component={NotFound} /><Route component={NotFound} /></Switch>;
 }
 
 export default function App() {

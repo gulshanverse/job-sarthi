@@ -34,3 +34,27 @@
 - [x] Review repository diff, secrets hygiene, generated artifacts, environment documentation, and README accuracy.
 - [x] Verify README accuracy against the final implemented scope and release commands.
 - [x] Create the final Git commit and push the completed project to the connected GitHub branch.
+- [x] Produce an evidence-based audit of current frontend, backend, database, authentication, resume, matching, automation, and deployment capabilities.
+- [x] Expand the candidate profile model and review flow with structured personal details, projects, certifications, and meaningful completion guidance.
+- [x] Harden resume upload and parsing for type, extension, empty-file, duplicate, corrupt-file, progress, failure, and retry states without exposing private files.
+- [x] Persist the reviewed email extracted from a resume alongside the candidate profile without replacing the OAuth identity record.
+- [x] Add measurable client-side file-read progress and an explicitly indeterminate server-processing state to the resume upload flow.
+- [x] Centralize skill normalization and implement configurable explainable relevance scoring with skill, role, experience, education, location, and preference breakdowns.
+- [x] Improve job records and browsing with safe, debounced search, relevant filters and sorting, pagination, and truthful job-detail actions.
+- [x] Complete the job-detail view with expanded metadata and truthful external-application follow-up actions.
+- [x] Display relevant job publication status on the detail page without cluttering the active-role experience.
+- [ ] Add focused verification for job-detail metadata, save and tracking actions, and the truthful external-application flow.
+- [ ] Verify job-detail, debounced search, filtered pagination, save, track, and external apply contracts.
+- [x] Complete saved-job synchronization and application tracking with clear lifecycle stages, duplicate prevention, and a truthful external-application flow.
+- [x] Build data-driven dashboard next actions, profile completion, selected-job skill-gap frequency insights, and recommendation views.
+- [x] Synchronize the dedicated Saved Jobs query when bookmarks are removed from any reusable job card surface.
+- [x] Scope skill-gap frequency evidence to the user-selected recommended-job context in Career Insights.
+- [ ] Add focused verification for saved-role synchronization and selected-job skill-gap frequency behavior.
+- [x] Add in-app, readable, dismissible notifications with duplicate prevention for profile, resume, application, and high-match events.
+- [x] Implement event-driven recommendation refreshes and a safe periodic digest architecture through supported scheduled infrastructure.
+- [x] Add protected admin job-management capabilities only where they improve real job ingestion and never expose candidate-private data.
+- [ ] Publish the updated site and then enable or test the deployment-gated weekly digest schedule from the Profile workspace.
+- [ ] Audit and improve loading, empty, error, accessibility, mobile/tablet/desktop, performance, and command-navigation experiences.
+- [ ] Expand unit and integration coverage for resume validation, profiles, matching and ranking, jobs, saves, applications, notifications, and protected APIs.
+- [ ] Update README and safe environment documentation to match only the shipped architecture, automation, testing, and deployment behavior.
+- [ ] Run comprehensive verification, inspect final Git changes and security hygiene, commit the production-polish work, push to GitHub, and verify the remote head.
