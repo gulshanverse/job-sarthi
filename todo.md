@@ -28,3 +28,9 @@
 - [x] Capture final responsive authenticated workspace evidence for the completed views.
 - [x] Add a dashboard query-error state and cover remaining invalid route inputs in backend tests.
 - [x] Capture authenticated mobile evidence for profile, recommendations, and applications after the final refinements.
+- [x] Inspect Git branch, status, history, remotes, and implementation files for release readiness.
+- [x] Verify the complete tracked client, server, database, and support-file inventory before release.
+- [x] Run final build, test, type-check, and available lint verification; fix only release-blocking issues.
+- [x] Review repository diff, secrets hygiene, generated artifacts, environment documentation, and README accuracy.
+- [x] Verify README accuracy against the final implemented scope and release commands.
+- [ ] Create the final Git commit and push the completed project to the connected GitHub branch.
