@@ -1,0 +1,30 @@
+# Project TODO
+
+- [x] Preserve and incorporate the existing public repository README into the project documentation.
+- [x] Establish Job Sarthi design tokens, typography, and a responsive premium visual system.
+- [x] Build the public landing page with hero, workflow explanation, feature highlights, and sign-in calls to action.
+- [x] Configure an authentication-aware application shell using the built-in Manus OAuth flow.
+- [x] Enforce protected routes for all authenticated candidate views.
+- [x] Model candidate profiles, resumes, job preferences, jobs, job skills, saved jobs, applications, and recommendations in the database.
+- [x] Implement candidate profile creation and multi-step onboarding for skills, experience, education, role, location, and work preferences.
+- [x] Implement secure PDF/DOCX resume uploads with object storage metadata and access controls.
+- [x] Implement LLM-backed structured resume extraction grounded in the uploaded document content.
+- [x] Allow users to review and correct extracted profile fields before use in recommendations.
+- [x] Implement job browsing with keyword search, role, location, type, experience-level filters, and pagination.
+- [x] Implement explainable profile-to-job match scoring and ranked personalized recommendations.
+- [x] Implement save/bookmark actions and application status tracking for saved, applied, interviewing, offer, and rejected stages.
+- [x] Implement LLM-assisted skill-gap analysis and career suggestions grounded in the candidate profile and selected jobs.
+- [x] Build accessible mobile, tablet, laptop, and desktop layouts with useful loading, empty, and error states.
+- [x] Add unit tests for authorization, profile-derived matching, and core backend contracts.
+- [x] Validate with responsive visual checks, type checking, tests, and a production build.
+- [x] Document implemented scope and prepare the final project checkpoint.
+- [x] Extend onboarding to review manual experience and education before profile confirmation.
+- [x] Add explicit role and employment-type filters to the jobs browser.
+- [x] Add direct actions to create application tracking from job views.
+- [x] Allow users to choose recommended jobs as context for career guidance.
+- [x] Add explicit feature-level error states and additional protected API contract tests.
+- [x] Re-validate responsive authenticated experiences after the final refinements.
+- [x] Add remaining protected-page error handling and invalid-input backend contract coverage.
+- [x] Capture final responsive authenticated workspace evidence for the completed views.
+- [x] Add a dashboard query-error state and cover remaining invalid route inputs in backend tests.
+- [x] Capture authenticated mobile evidence for profile, recommendations, and applications after the final refinements.
