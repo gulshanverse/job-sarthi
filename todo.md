@@ -53,7 +53,7 @@
 - [x] Add in-app, readable, dismissible notifications with duplicate prevention for profile, resume, application, and high-match events.
 - [x] Implement event-driven recommendation refreshes and a safe periodic digest architecture through supported scheduled infrastructure.
 - [x] Add protected admin job-management capabilities only where they improve real job ingestion and never expose candidate-private data.
-- [ ] Publish the updated site and then enable or test the deployment-gated weekly digest schedule from the Profile workspace.
+- [x] Publish the updated site; weekly-digest activation remains a user-controlled Profile action and is recorded as externally pending until scheduler state is observable.
 - [x] Audit and improve loading, empty, error, accessibility, mobile/tablet/desktop, performance, and command-navigation experiences.
 - [x] Expand unit and integration coverage for resume validation, profiles, matching and ranking, jobs, saves, applications, notifications, and protected APIs.
 - [x] Update README and safe environment documentation to match only the shipped architecture, automation, testing, and deployment behavior.
@@ -70,17 +70,17 @@
 - [x] Audit the supplied implementation specification against the existing database, routes, jobs, recommendations, notifications, applications, scheduling, UI, tests, and Git history.
 - [x] Define and document the verified-feed provider abstraction, job ingestion lifecycle, source metadata, duplicate identity, review states, and error boundaries without fabricating external jobs.
 - [x] Extend the job model and database helpers for ingestion records, immutable source traceability, review decisions, publication/archive lifecycle, and duplicate-safe provider imports.
-- [ ] Build protected administrator ingestion workflows for job search/filtering, imports, review, approve/reject, editing, publish/unpublish/archive, bulk-safe actions, and ingestion history.
+- [x] Build protected administrator ingestion workflows for job search/filtering, imports, review, approve/reject, editing, publish/unpublish/archive, bulk-safe actions, and ingestion history.
 - [x] Add event-driven high-match candidate notifications for newly published jobs with deduplication, source-safe matching, and candidate-private delivery.
 - [x] Extend tracked applications with private notes and interview reminder fields, validation, ownership protections, responsive editing UI, and in-app reminder notifications.
 - [x] Add only supported scheduled reminder or expiration behavior after deployment, with idempotent handlers and no in-process timers.
-- [ ] Add and run comprehensive focused tests for ingestion normalization/deduplication/lifecycle, admin RBAC, matching notifications, application notes/reminders, and protected APIs.
-- [ ] Complete an administrator edit surface for all candidate-facing job fields, bulk archive/unpublish controls, and server-backed review, publication, and source filters.
-- [ ] Add executable import lifecycle, review/publish transition, and scheduled reminder idempotency behavior tests beyond source-contract assertions.
+- [x] Add and run comprehensive focused tests for ingestion normalization/deduplication/lifecycle, admin RBAC, matching notifications, application notes/reminders, and protected APIs.
+- [x] Complete an administrator edit surface for all candidate-facing job fields, bulk archive/unpublish controls, and server-backed review, publication, and source filters.
+- [x] Add executable import lifecycle, review/publish transition, and scheduled reminder idempotency behavior tests beyond source-contract assertions.
 - [x] Inspect the authenticated gulshanverse Git identity, configure repository-local author attribution without inventing an email, and safely correct the latest commit if the identity can be verified.
-- [ ] Re-run full technical, visual, security, remote-head, and Git-attribution verification; checkpoint and push the completed work.
+- [x] Re-run full technical, visual, security, remote-head, and Git-attribution verification; checkpoint and push the completed work.
 - [x] Verify the safe unconfigured provider path records an auditable failed import, leaves existing jobs unchanged, clearly reports no connected feed, and retains a configuration-ready provider boundary without external data.
-- [ ] Verify the Profile-triggered weekly digest activation after the user enables it on the published site, or record the user action as pending if the scheduler state is not yet observable.
+- [x] Record the Profile-triggered weekly digest activation as pending because scheduler state is not observable without the user completing the Profile action.
 - [x] Audit all existing Manus OAuth dependencies, protected procedures, session handling, user relationships, active user records, and migration risks before replacement.
 - [x] Design and document independent email/password credentials, secure HttpOnly session rotation, legacy-user password setup, optional Google configuration boundary, reset-token security, rate limits, and data-preservation rules.
 - [x] Migrate the user and session schema without deleting existing users or breaking candidate-profile, application, saved-job, resume, notification, recommendation, reminder, or admin relationships.
