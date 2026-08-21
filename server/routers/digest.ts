@@ -1,4 +1,3 @@
-import { parse as parseCookie } from "cookie";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { getCandidateProfile, updateWeeklyDigestSchedule } from "../db";

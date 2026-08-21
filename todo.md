@@ -92,3 +92,4 @@
 - [x] Surface the optional Google-unavailable boundary consistently on both independent authentication entry points.
 - [x] Add a reachable Security destination to the authenticated dashboard navigation.
 - [x] Add focused lifecycle tests for login, session rotation, session restoration, and preserved legacy-account ownership behavior.
+- [x] Remove the unused legacy platform-cookie import from the weekly-digest router and re-run release verification.
