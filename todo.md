@@ -81,3 +81,14 @@
 - [ ] Re-run full technical, visual, security, remote-head, and Git-attribution verification; checkpoint and push the completed work.
 - [x] Verify the safe unconfigured provider path records an auditable failed import, leaves existing jobs unchanged, clearly reports no connected feed, and retains a configuration-ready provider boundary without external data.
 - [ ] Verify the Profile-triggered weekly digest activation after the user enables it on the published site, or record the user action as pending if the scheduler state is not yet observable.
+- [x] Audit all existing Manus OAuth dependencies, protected procedures, session handling, user relationships, active user records, and migration risks before replacement.
+- [x] Design and document independent email/password credentials, secure HttpOnly session rotation, legacy-user password setup, optional Google configuration boundary, reset-token security, rate limits, and data-preservation rules.
+- [x] Migrate the user and session schema without deleting existing users or breaking candidate-profile, application, saved-job, resume, notification, recommendation, reminder, or admin relationships.
+- [x] Replace Manus OAuth context, middleware, callbacks, frontend auth hooks, login links, environment dependencies, and logout behavior with Job Sarthi-owned authentication.
+- [x] Implement registration, login, logout, current-session restore, password setup for legacy accounts, password change, forgot-password, reset-password, and optional-Google-unavailable experiences.
+- [x] Add independent account profile and security controls, including actual account identity, active-session listing, and safe sign-out controls.
+- [x] Add and run focused tests for password rules and hashing, session cookies and rotation, reset token expiry/single use, rate limiting, legacy-user ownership preservation, login/logout, protected APIs, and admin authorization.
+- [ ] Run full migration, technical, visual, security, secret, and data-integrity verification; commit and push with the verified Gulshan identity; checkpoint the independent-auth release.
+- [x] Surface the optional Google-unavailable boundary consistently on both independent authentication entry points.
+- [x] Add a reachable Security destination to the authenticated dashboard navigation.
+- [x] Add focused lifecycle tests for login, session rotation, session restoration, and preserved legacy-account ownership behavior.

@@ -1,0 +1,11 @@
+import React, { useState } from "react";
+import { Link, useLocation } from "wouter";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { trpc } from "@/lib/trpc";
+
+export default function ResetPassword() {
+  const [, setLocation] = useLocation(); const [token, setToken] = useState(new URLSearchParams(window.location.search).get("token") ?? ""); const [password, setPassword] = useState(""); const [confirmPassword, setConfirmPassword] = useState(""); const [error, setError] = useState(""); const reset = trpc.auth.resetPassword.useMutation({ onSuccess: () => setLocation("/dashboard"), onError: value => setError(value.message) });
+  return <main className="landing-grid grid min-h-screen place-items-center bg-[#f7faff] p-5"><section className="w-full max-w-md rounded-[1.75rem] border border-[#dbe6f1] bg-white p-7 surface-shadow sm:p-9"><Link href="/login" className="text-sm font-extrabold text-[#18446e]">Job Sarthi</Link><h1 className="mt-9 font-display text-4xl font-semibold tracking-[-.06em] text-[#112b51]">Choose a new password.</h1><form className="mt-7 space-y-5" onSubmit={event => { event.preventDefault(); setError(""); reset.mutate({ token, password, confirmPassword }); }}><div className="space-y-2"><Label htmlFor="reset-token">Reset token</Label><Input id="reset-token" value={token} onChange={event => setToken(event.target.value)} required /></div><div className="space-y-2"><Label htmlFor="reset-password">New password</Label><Input id="reset-password" type="password" autoComplete="new-password" value={password} onChange={event => setPassword(event.target.value)} required /></div><div className="space-y-2"><Label htmlFor="reset-confirm">Confirm password</Label><Input id="reset-confirm" type="password" autoComplete="new-password" value={confirmPassword} onChange={event => setConfirmPassword(event.target.value)} required /></div>{error && <p role="alert" className="rounded-xl bg-[#fff3f1] p-3 text-sm font-medium text-[#9e4e48]">{error}</p>}<Button className="h-11 w-full rounded-xl bg-[#0d2c58] font-bold hover:bg-[#12386d]" disabled={reset.isPending}>{reset.isPending ? "Updating…" : "Reset password"}</Button></form></section></main>;
+}

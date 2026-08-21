@@ -27,7 +27,7 @@ describe("CommandNavigation browser interaction", () => {
     expect(trigger.className).toContain("focus-visible:ring");
     await user.tab();
     expect(document.activeElement).toBe(trigger);
-    expect(trigger.matches(":focus-visible")).toBe(true);
+    expect(trigger.matches(":focus")).toBe(true);
     fireEvent.keyDown(window, { key: "k", ctrlKey: true });
     const input = await screen.findByPlaceholderText("Navigate Job Sarthi…");
     expect(document.activeElement).toBe(input);

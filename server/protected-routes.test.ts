@@ -24,13 +24,18 @@ describe("protected Job Sarthi routes", () => {
       openId: "candidate-1",
       name: "Candidate",
       email: "candidate@example.com",
-      loginMethod: "manus",
+      passwordHash: "argon2id-hash",
+      authStatus: "active" as const,
+      emailVerified: false,
+      termsAcceptedAt: null,
+      passwordChangedAt: new Date(),
+      loginMethod: "password",
       role: "user" as const,
       createdAt: new Date(),
       updatedAt: new Date(),
       lastSignedIn: new Date(),
     };
-    const ctx: TrpcContext = { user, req: {} as TrpcContext["req"], res: {} as TrpcContext["res"] };
+    const ctx: TrpcContext = { user, sessionId: 1, req: {} as TrpcContext["req"], res: {} as TrpcContext["res"] };
     const caller = appRouter.createCaller(ctx);
     await expect(caller.jobs.list({ page: 0, pageSize: 9 })).rejects.toMatchObject({ code: "BAD_REQUEST" });
     await expect(caller.profile.upsert({
@@ -59,16 +64,16 @@ describe("protected Job Sarthi routes", () => {
   });
 
   it("denies non-admin job-management and protects notification data", async () => {
-    const user = { id: 1, openId: "candidate-1", name: "Candidate", email: "candidate@example.com", loginMethod: "manus", role: "user" as const, createdAt: new Date(), updatedAt: new Date(), lastSignedIn: new Date() };
-    const caller = appRouter.createCaller({ user, req: {} as TrpcContext["req"], res: {} as TrpcContext["res"] });
+    const user = { id: 1, openId: "candidate-1", name: "Candidate", email: "candidate@example.com", passwordHash: "argon2id-hash", authStatus: "active" as const, emailVerified: false, termsAcceptedAt: null, passwordChangedAt: new Date(), loginMethod: "password", role: "user" as const, createdAt: new Date(), updatedAt: new Date(), lastSignedIn: new Date() };
+    const caller = appRouter.createCaller({ user, sessionId: 1, req: {} as TrpcContext["req"], res: {} as TrpcContext["res"] });
     await expect(caller.adminJobs.list()).rejects.toMatchObject({ code: "FORBIDDEN" });
     await expect(caller.adminJobs.import()).rejects.toMatchObject({ code: "FORBIDDEN" });
     await expect(caller.notifications.markRead({ notificationId: 0 })).rejects.toMatchObject({ code: "BAD_REQUEST" });
   });
 
   it("allows the admin router to validate an admin request rather than rejecting it as forbidden", async () => {
-    const admin = { id: 2, openId: "admin-1", name: "Admin", email: "admin@example.com", loginMethod: "manus", role: "admin" as const, createdAt: new Date(), updatedAt: new Date(), lastSignedIn: new Date() };
-    const caller = appRouter.createCaller({ user: admin, req: {} as TrpcContext["req"], res: {} as TrpcContext["res"] });
+    const admin = { id: 2, openId: "admin-1", name: "Admin", email: "admin@example.com", passwordHash: "argon2id-hash", authStatus: "active" as const, emailVerified: false, termsAcceptedAt: null, passwordChangedAt: new Date(), loginMethod: "password", role: "admin" as const, createdAt: new Date(), updatedAt: new Date(), lastSignedIn: new Date() };
+    const caller = appRouter.createCaller({ user: admin, sessionId: 1, req: {} as TrpcContext["req"], res: {} as TrpcContext["res"] });
     await expect(caller.adminJobs.create({ title: "", company: "", location: "", workMode: "remote", employmentType: "full_time", experienceLevel: "entry", description: "too short", requirements: [] })).rejects.toMatchObject({ code: "BAD_REQUEST" });
   });
 });

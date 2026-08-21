@@ -4,7 +4,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarInset, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
-import { startLogin } from "@/const";
+import { goToLogin } from "@/const";
 import { BookmarkCheck, BriefcaseBusiness, Compass, LayoutDashboard, Lightbulb, LogOut, ShieldCheck, Sparkles, UserRound } from "lucide-react";
 import { useLocation } from "wouter";
 import { DashboardLayoutSkeleton } from "./DashboardLayoutSkeleton";
@@ -19,12 +19,13 @@ const navigation = [
   { path: "/saved", label: "Saved roles", icon: BookmarkCheck },
   { path: "/applications", label: "Applications", icon: BriefcaseBusiness },
   { path: "/profile", label: "My profile", icon: UserRound },
+  { path: "/security", label: "Security", icon: ShieldCheck },
 ];
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { loading, user } = useAuth();
   if (loading) return <DashboardLayoutSkeleton />;
-  if (!user) return <div className="landing-grid grid min-h-screen place-items-center bg-[#f7faff] p-5"><div className="w-full max-w-md rounded-3xl border border-[#dbe6f1] bg-white p-8 text-center surface-shadow"><div className="mx-auto w-fit"><BrandMark /></div><h1 className="mt-9 font-display text-3xl font-semibold tracking-[-.05em] text-[#112b51]">Your career space is ready.</h1><p className="mt-4 text-sm leading-6 text-[#66778b]">Sign in to build your profile, explore relevant roles, and keep your applications in one place.</p><Button className="pressable mt-7 h-11 w-full rounded-xl bg-[#0d2c58] font-bold hover:bg-[#12386d]" onClick={() => startLogin()}>Sign in to continue</Button></div></div>;
+  if (!user) return <div className="landing-grid grid min-h-screen place-items-center bg-[#f7faff] p-5"><div className="w-full max-w-md rounded-3xl border border-[#dbe6f1] bg-white p-8 text-center surface-shadow"><div className="mx-auto w-fit"><BrandMark /></div><h1 className="mt-9 font-display text-3xl font-semibold tracking-[-.05em] text-[#112b51]">Your career space is ready.</h1><p className="mt-4 text-sm leading-6 text-[#66778b]">Sign in to build your profile, explore relevant roles, and keep your applications in one place.</p><Button className="pressable mt-7 h-11 w-full rounded-xl bg-[#0d2c58] font-bold hover:bg-[#12386d]" onClick={goToLogin}>Sign in to continue</Button></div></div>;
   return <SidebarProvider><CandidateShell>{children}</CandidateShell></SidebarProvider>;
 }
 

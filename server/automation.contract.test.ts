@@ -14,10 +14,9 @@ describe("matching and reminder automation contracts", () => {
     expect(newJobRefresh).toContain("fingerprint: `high-match:${job.id}`");
   });
 
-  it("requires a cron task UID, resolves reminder ownership by task UID, skips sent work, and records a deduplicated in-app result", () => {
-    expect(reminder).toContain("!actor.isCron || !actor.taskUid");
-    expect(reminder).toContain("getInterviewReminderByTaskUid(actor.taskUid)");
-    expect(reminder).toContain("reminder.status !== \"scheduled\"");
+  it("requires cron authentication, processes only bounded due work, and records a deduplicated in-app result", () => {
+    expect(reminder).toContain("if (!actor.isCron)");
+    expect(reminder).toContain("listDueInterviewReminders(50)");
     expect(reminder).toContain("fingerprint: `interview-reminder:${reminder.id}`");
     expect(reminder).toContain("markInterviewReminderSent(reminder.id)");
   });

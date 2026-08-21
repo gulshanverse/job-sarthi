@@ -1,17 +1,12 @@
 import { TRPCError } from "@trpc/server";
-import { parse as parseCookie } from "cookie";
 import { z } from "zod";
-import { COOKIE_NAME } from "../../shared/const";
-import { cancelInterviewReminder, createApplicationNote, createApplicationTimelineEvent, deleteApplicationNote, getApplicationForUser, getInterviewReminderForApplication, listApplicationNotes, listApplicationTimeline, saveInterviewReminder, updateApplicationNote, updateInterviewReminderTaskUid } from "../db";
-import { createHeartbeatJob, updateHeartbeatJob } from "../_core/heartbeat";
+import { cancelInterviewReminder, createApplicationNote, createApplicationTimelineEvent, deleteApplicationNote, getApplicationForUser, getInterviewReminderForApplication, listApplicationNotes, listApplicationTimeline, saveInterviewReminder, updateApplicationNote } from "../db";
 import { protectedProcedure, router } from "../_core/trpc";
 
 const applicationId = z.object({ applicationId: z.number().int().positive() });
 const noteContent = z.string().trim().min(1, "Write a note before saving.").max(4_000, "Keep each note under 4,000 characters.");
 const reminderInput = applicationId.extend({ scheduledFor: z.coerce.date(), leadMinutes: z.number().int().min(15).max(10_080), title: z.string().trim().min(2).max(180), notes: z.string().trim().max(2_000).nullable().default(null) });
 
-function sessionFromHeaders(cookieHeader: string | undefined) { return parseCookie(cookieHeader ?? "")[COOKIE_NAME] ?? ""; }
-function cronFor(date: Date) { return `0 ${date.getUTCMinutes()} ${date.getUTCHours()} ${date.getUTCDate()} ${date.getUTCMonth() + 1} *`; }
 
 async function owned(applicationIdValue: number, userId: number) {
   const item = await getApplicationForUser(applicationIdValue, userId);
@@ -50,12 +45,6 @@ export const applicationsRouter = router({
     const existing = await getInterviewReminderForApplication(input.applicationId, ctx.user.id);
     const reminder = await saveInterviewReminder(input.applicationId, ctx.user.id, { scheduledFor: input.scheduledFor, remindAt, title: input.title, notes: input.notes, scheduleCronTaskUid: existing?.scheduleCronTaskUid ?? null });
     if (!reminder) throw new Error("Could not save the interview reminder.");
-    const session = sessionFromHeaders(ctx.req.headers.cookie);
-    if (reminder.scheduleCronTaskUid) await updateHeartbeatJob(reminder.scheduleCronTaskUid, { cron: cronFor(remindAt), enable: true, description: `Interview reminder for application ${input.applicationId}` }, session);
-    else {
-      const task = await createHeartbeatJob({ name: `job-sarthi-interview-reminder-${reminder.id}`, cron: cronFor(remindAt), path: "/api/scheduled/interview-reminder", payload: {}, description: `Interview reminder for application ${input.applicationId}` }, session);
-      await updateInterviewReminderTaskUid(reminder.id, ctx.user.id, task.taskUid);
-    }
     await createApplicationTimelineEvent(input.applicationId, ctx.user.id, "reminder_scheduled", `Interview reminder scheduled for ${input.leadMinutes >= 1440 ? "one day" : `${input.leadMinutes} minutes`} before the interview.`);
     return { reminder: await getInterviewReminderForApplication(input.applicationId, ctx.user.id), application: item };
   }),
@@ -63,7 +52,6 @@ export const applicationsRouter = router({
     await owned(input.applicationId, ctx.user.id);
     const reminder = await getInterviewReminderForApplication(input.applicationId, ctx.user.id);
     if (!reminder) throw new TRPCError({ code: "NOT_FOUND", message: "Reminder not found." });
-    if (reminder.scheduleCronTaskUid) await updateHeartbeatJob(reminder.scheduleCronTaskUid, { enable: false }, sessionFromHeaders(ctx.req.headers.cookie));
     await cancelInterviewReminder(input.applicationId, ctx.user.id);
     await createApplicationTimelineEvent(input.applicationId, ctx.user.id, "reminder_cancelled", "Cancelled the interview reminder.");
     return { success: true };

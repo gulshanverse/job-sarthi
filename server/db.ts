@@ -4,6 +4,7 @@ import {
   applications,
   applicationNotes,
   applicationTimelineEvents,
+  authSessions,
   candidateProfiles,
   careerInsights,
   type CandidateProfile,
@@ -13,6 +14,7 @@ import {
   jobIngestionRuns,
   jobs,
   notifications,
+  passwordResetTokens,
   recommendations,
   resumes,
   savedJobs,
@@ -55,6 +57,89 @@ export async function getUserByOpenId(openId: string): Promise<User | undefined>
   const db = await getDb();
   if (!db) return undefined;
   return (await db.select().from(users).where(eq(users.openId, openId)).limit(1))[0];
+}
+
+export async function getUserById(userId: number): Promise<User | undefined> {
+  const db = await getDb();
+  if (!db) return undefined;
+  return (await db.select().from(users).where(eq(users.id, userId)).limit(1))[0];
+}
+
+export async function getUserByEmail(email: string): Promise<User | undefined> {
+  const db = await getDb();
+  if (!db) return undefined;
+  return (await db.select().from(users).where(eq(users.email, email.trim().toLowerCase())).limit(1))[0];
+}
+
+export async function createCredentialUser(input: { name: string; email: string; passwordHash: string; termsAcceptedAt: Date }) {
+  const db = await requireDb();
+  const email = input.email.trim().toLowerCase();
+  const result = await db.insert(users).values({ name: input.name.trim(), email, passwordHash: input.passwordHash, authStatus: "active", emailVerified: false, termsAcceptedAt: input.termsAcceptedAt, loginMethod: "password", role: "user", lastSignedIn: new Date() });
+  const id = Number((result as unknown as Array<{ insertId: number }>)[0]?.insertId);
+  return getUserById(id);
+}
+
+export async function updateUserPassword(userId: number, passwordHash: string, options: { activateLegacy?: boolean } = {}) {
+  const db = await requireDb();
+  await db.update(users).set({ passwordHash, authStatus: options.activateLegacy ? "active" : undefined, loginMethod: "password", passwordChangedAt: new Date(), lastSignedIn: new Date() }).where(eq(users.id, userId));
+  return getUserById(userId);
+}
+
+export async function createAuthSession(input: { userId: number; tokenHash: string; expiresAt: Date; userAgent?: string | null; ipHash?: string | null; rotatedFromSessionId?: number | null }) {
+  const db = await requireDb();
+  const result = await db.insert(authSessions).values({ ...input, userAgent: input.userAgent ?? null, ipHash: input.ipHash ?? null, rotatedFromSessionId: input.rotatedFromSessionId ?? null });
+  const id = Number((result as unknown as Array<{ insertId: number }>)[0]?.insertId);
+  return (await db.select().from(authSessions).where(eq(authSessions.id, id)).limit(1))[0];
+}
+
+export async function getActiveSessionWithUser(tokenHash: string) {
+  const db = await requireDb();
+  const row = (await db.select({ session: authSessions, user: users }).from(authSessions).innerJoin(users, eq(authSessions.userId, users.id)).where(and(eq(authSessions.tokenHash, tokenHash), isNull(authSessions.revokedAt))).limit(1))[0] ?? null;
+  if (!row || row.session.expiresAt.getTime() <= Date.now()) return null;
+  return row;
+}
+
+export async function touchAuthSession(sessionId: number) {
+  const db = await requireDb();
+  await db.update(authSessions).set({ lastActiveAt: new Date() }).where(and(eq(authSessions.id, sessionId), isNull(authSessions.revokedAt)));
+}
+
+export async function revokeAuthSession(sessionId: number) {
+  const db = await requireDb();
+  await db.update(authSessions).set({ revokedAt: new Date() }).where(and(eq(authSessions.id, sessionId), isNull(authSessions.revokedAt)));
+}
+
+export async function revokeOtherAuthSessions(userId: number, currentSessionId: number) {
+  const db = await requireDb();
+  await db.update(authSessions).set({ revokedAt: new Date() }).where(and(eq(authSessions.userId, userId), sql`${authSessions.id} <> ${currentSessionId}`, isNull(authSessions.revokedAt)));
+}
+
+export async function revokeAllAuthSessions(userId: number) {
+  const db = await requireDb();
+  await db.update(authSessions).set({ revokedAt: new Date() }).where(and(eq(authSessions.userId, userId), isNull(authSessions.revokedAt)));
+}
+
+export async function listActiveAuthSessions(userId: number) {
+  const db = await requireDb();
+  const sessions = await db.select().from(authSessions).where(and(eq(authSessions.userId, userId), isNull(authSessions.revokedAt))).orderBy(desc(authSessions.lastActiveAt));
+  return sessions.filter(session => session.expiresAt.getTime() > Date.now());
+}
+
+export async function createPasswordResetToken(input: { userId: number; tokenHash: string; expiresAt: Date }) {
+  const db = await requireDb();
+  await db.insert(passwordResetTokens).values(input);
+}
+
+export async function getUsablePasswordResetToken(tokenHash: string) {
+  const db = await requireDb();
+  const token = (await db.select().from(passwordResetTokens).where(and(eq(passwordResetTokens.tokenHash, tokenHash), isNull(passwordResetTokens.usedAt))).limit(1))[0] ?? null;
+  if (!token || token.expiresAt.getTime() <= Date.now()) return null;
+  return token;
+}
+
+export async function consumePasswordResetToken(tokenId: number) {
+  const db = await requireDb();
+  await db.update(passwordResetTokens).set({ usedAt: new Date() }).where(and(eq(passwordResetTokens.id, tokenId), isNull(passwordResetTokens.usedAt)));
 }
 
 export async function getCandidateProfile(userId: number) {
@@ -314,6 +399,11 @@ export async function getInterviewReminderForApplication(applicationId: number, 
 export async function getInterviewReminderByTaskUid(taskUid: string) {
   const db = await requireDb();
   return (await db.select().from(interviewReminders).where(eq(interviewReminders.scheduleCronTaskUid, taskUid)).limit(1))[0] ?? null;
+}
+
+export async function listDueInterviewReminders(limit = 50) {
+  const db = await requireDb();
+  return db.select().from(interviewReminders).where(and(eq(interviewReminders.status, "scheduled"), sql`${interviewReminders.remindAt} <= NOW()`)).orderBy(asc(interviewReminders.remindAt)).limit(limit);
 }
 
 export async function saveInterviewReminder(applicationId: number, userId: number, input: { scheduledFor: Date; remindAt: Date; title: string; notes?: string | null; scheduleCronTaskUid?: string | null }) {

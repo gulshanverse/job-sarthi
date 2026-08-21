@@ -40,15 +40,52 @@ export type CertificationItem = {
 
 export const users = mysqlTable("users", {
   id: int("id").autoincrement().primaryKey(),
-  openId: varchar("openId", { length: 64 }).notNull().unique(),
+  // Legacy platform identifier retained only for migration history. New Job Sarthi
+  // accounts use the independent email/password credential fields below.
+  openId: varchar("openId", { length: 64 }).unique(),
   name: text("name"),
-  email: varchar("email", { length: 320 }),
+  email: varchar("email", { length: 320 }).unique(),
+  passwordHash: varchar("passwordHash", { length: 255 }),
+  authStatus: mysqlEnum("authStatus", ["active", "password_setup_required"]).default("password_setup_required").notNull(),
+  emailVerified: boolean("emailVerified").default(false).notNull(),
+  termsAcceptedAt: timestamp("termsAcceptedAt"),
+  passwordChangedAt: timestamp("passwordChangedAt"),
   loginMethod: varchar("loginMethod", { length: 64 }),
   role: mysqlEnum("role", ["user", "admin"]).default("user").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),
 });
+
+export const authSessions = mysqlTable(
+  "auth_sessions",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    userId: int("userId").notNull(),
+    tokenHash: varchar("tokenHash", { length: 64 }).notNull().unique(),
+    rotatedFromSessionId: int("rotatedFromSessionId"),
+    userAgent: varchar("userAgent", { length: 250 }),
+    ipHash: varchar("ipHash", { length: 64 }),
+    expiresAt: timestamp("expiresAt").notNull(),
+    lastActiveAt: timestamp("lastActiveAt").defaultNow().notNull(),
+    revokedAt: timestamp("revokedAt"),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+  },
+  table => [index("auth_sessions_user_idx").on(table.userId), index("auth_sessions_expiry_idx").on(table.expiresAt)],
+);
+
+export const passwordResetTokens = mysqlTable(
+  "password_reset_tokens",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    userId: int("userId").notNull(),
+    tokenHash: varchar("tokenHash", { length: 64 }).notNull().unique(),
+    expiresAt: timestamp("expiresAt").notNull(),
+    usedAt: timestamp("usedAt"),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+  },
+  table => [index("password_reset_user_idx").on(table.userId), index("password_reset_expiry_idx").on(table.expiresAt)],
+);
 
 export const candidateProfiles = mysqlTable(
   "candidate_profiles",

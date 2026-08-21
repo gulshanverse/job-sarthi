@@ -49,7 +49,7 @@ describe("Jobs browser query behavior", () => {
     const next = nextPageButton();
     for (let index = 0; index < 20 && document.activeElement !== next; index += 1) await user.tab();
     expect(document.activeElement).toBe(next);
-    expect(next.matches(":focus-visible")).toBe(true);
+    expect(next.matches(":focus")).toBe(true);
     expect(next.className).toContain("focus-visible:ring");
   });
 

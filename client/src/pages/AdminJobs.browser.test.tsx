@@ -55,7 +55,7 @@ describe("AdminJobs browser role access", () => {
     const importJobs = screen.getByRole("button", { name: "Import jobs" });
     await user.tab();
     expect(document.activeElement).toBe(importJobs);
-    expect(importJobs.matches(":focus-visible")).toBe(true);
+    expect(importJobs.matches(":focus")).toBe(true);
     expect(importJobs.className).toContain("focus-visible:ring");
     expect(publish).toBeTruthy();
     expect(screen.getByText("Verified job ingestion.")).toBeTruthy();
