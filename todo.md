@@ -88,7 +88,7 @@
 - [x] Implement registration, login, logout, current-session restore, password setup for legacy accounts, password change, forgot-password, reset-password, and optional-Google-unavailable experiences.
 - [x] Add independent account profile and security controls, including actual account identity, active-session listing, and safe sign-out controls.
 - [x] Add and run focused tests for password rules and hashing, session cookies and rotation, reset token expiry/single use, rate limiting, legacy-user ownership preservation, login/logout, protected APIs, and admin authorization.
-- [ ] Run full migration, technical, visual, security, secret, and data-integrity verification; commit and push with the verified Gulshan identity; checkpoint the independent-auth release.
+- [x] Run full migration, technical, visual, security, secret, and data-integrity verification; commit and push with the verified Gulshan identity; checkpoint the independent-auth release.
 - [x] Surface the optional Google-unavailable boundary consistently on both independent authentication entry points.
 - [x] Add a reachable Security destination to the authenticated dashboard navigation.
 - [x] Add focused lifecycle tests for login, session rotation, session restoration, and preserved legacy-account ownership behavior.
