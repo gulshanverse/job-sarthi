@@ -8,6 +8,7 @@ import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { scheduledWeeklyDigest } from "../scheduledWeeklyDigest";
 import { scheduledInterviewReminder } from "../scheduledInterviewReminder";
+import { schedulerHealth } from "../internalScheduler";
 import { serveStatic, setupVite } from "./vite";
 
 function isPortAvailable(port: number): Promise<boolean> {
@@ -36,8 +37,10 @@ async function startServer() {
   app.use(express.json({ limit: "50mb" }));
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
   registerStorageProxy(app);
-  app.post("/api/scheduled/weekly-digest", scheduledWeeklyDigest);
-  app.post("/api/scheduled/interview-reminder", scheduledInterviewReminder);
+  app.post("/api/internal/scheduler/health", schedulerHealth);
+  app.post("/api/internal/scheduler/weekly-digest", scheduledWeeklyDigest);
+  app.post("/api/internal/scheduler/interview-reminders", scheduledInterviewReminder);
+  app.all("/api/scheduled/*", (_req, res) => res.status(410).json({ error: "legacy-scheduler-endpoint-retired" }));
   // tRPC API
   app.use(
     "/api/trpc",
@@ -62,6 +65,7 @@ async function startServer() {
 
   server.listen(port, () => {
     console.log(`Server running on http://localhost:${port}/`);
+    console.log("Job Sarthi internal scheduler endpoints are ready for an external machine-authenticated scheduler.");
   });
 }
 

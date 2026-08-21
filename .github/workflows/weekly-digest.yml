@@ -1,0 +1,22 @@
+name: Job Sarthi Weekly Digest
+
+on:
+  schedule:
+    - cron: "0 9 * * 1"
+  workflow_dispatch:
+
+jobs:
+  invoke-weekly-digest:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Invoke Job Sarthi weekly digest
+        env:
+          JOB_SCHEDULER_URL: ${{ secrets.JOB_SCHEDULER_URL }}
+          JOB_SCHEDULER_SECRET: ${{ secrets.JOB_SCHEDULER_SECRET }}
+        run: |
+          test -n "$JOB_SCHEDULER_URL"
+          test -n "$JOB_SCHEDULER_SECRET"
+          curl --fail-with-body --silent --show-error --retry 2 --retry-all-errors \
+            -X POST "${JOB_SCHEDULER_URL%/}/api/internal/scheduler/weekly-digest" \
+            -H "Authorization: Bearer $JOB_SCHEDULER_SECRET" \
+            -H "Content-Type: application/json"

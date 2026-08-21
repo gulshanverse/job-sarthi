@@ -1,0 +1,22 @@
+name: Job Sarthi Interview Reminders
+
+on:
+  schedule:
+    - cron: "0 */6 * * *"
+  workflow_dispatch:
+
+jobs:
+  invoke-interview-reminders:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Invoke Job Sarthi interview reminders
+        env:
+          JOB_SCHEDULER_URL: ${{ secrets.JOB_SCHEDULER_URL }}
+          JOB_SCHEDULER_SECRET: ${{ secrets.JOB_SCHEDULER_SECRET }}
+        run: |
+          test -n "$JOB_SCHEDULER_URL"
+          test -n "$JOB_SCHEDULER_SECRET"
+          curl --fail-with-body --silent --show-error --retry 2 --retry-all-errors \
+            -X POST "${JOB_SCHEDULER_URL%/}/api/internal/scheduler/interview-reminders" \
+            -H "Authorization: Bearer $JOB_SCHEDULER_SECRET" \
+            -H "Content-Type: application/json"

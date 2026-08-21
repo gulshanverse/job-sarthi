@@ -93,3 +93,10 @@
 - [x] Add a reachable Security destination to the authenticated dashboard navigation.
 - [x] Add focused lifecycle tests for login, session rotation, session restoration, and preserved legacy-account ownership behavior.
 - [x] Remove the unused legacy platform-cookie import from the weekly-digest router and re-run release verification.
+- [ ] Map every requirement in pasted_content_7.txt to the current Job Sarthi release, implement only verified gaps, and complete architecture-preserving release verification.
+- [x] Replace platform scheduler authentication with a Job Sarthi server-to-server machine credential that excludes candidate and admin sessions.
+- [x] Replace platform callback routes with portable internal scheduler endpoints and remove platform scheduler verifier execution paths.
+- [x] Implement durable weekly-digest delivery records, batch processing, per-user failure isolation, UTC period idempotency, and an honest in-app fallback while email delivery is unconfigured.
+- [x] Add a portable scheduled-invoker configuration and scheduler health/status documentation without committing credentials or adding unreliable in-process timers.
+- [x] Add scheduler authentication, authorization, digest lifecycle, idempotency, failure-isolation, and independent deployment tests.
+- [ ] Verify secret safety, platform-dependency removal, protected routes, administrator authorization, scheduler behavior, typecheck, formatting scope, tests, and production build; then commit, push, and checkpoint verified changes.

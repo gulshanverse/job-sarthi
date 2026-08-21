@@ -9,7 +9,6 @@ import {
   careerInsights,
   type CandidateProfile,
   type InsertCandidateProfile,
-  type InsertUser,
   interviewReminders,
   jobIngestionRuns,
   jobs,
@@ -20,8 +19,8 @@ import {
   savedJobs,
   type User,
   users,
+  weeklyDigestDeliveries,
 } from "../drizzle/schema";
-import { ENV } from "./_core/env";
 
 let _db: ReturnType<typeof drizzle> | null = null;
 
@@ -41,16 +40,6 @@ async function requireDb() {
   const db = await getDb();
   if (!db) throw new Error("Database is not available");
   return db;
-}
-
-export async function upsertUser(user: InsertUser): Promise<void> {
-  if (!user.openId) throw new Error("User openId is required for upsert");
-  const db = await getDb();
-  if (!db) return;
-  const values: InsertUser = { ...user, role: user.role ?? (user.openId === ENV.ownerOpenId ? "admin" : "user"), lastSignedIn: user.lastSignedIn ?? new Date() };
-  await db.insert(users).values(values).onDuplicateKeyUpdate({
-    set: { name: values.name, email: values.email, loginMethod: values.loginMethod, lastSignedIn: values.lastSignedIn },
-  });
 }
 
 export async function getUserByOpenId(openId: string): Promise<User | undefined> {
@@ -147,20 +136,44 @@ export async function getCandidateProfile(userId: number) {
   return (await db.select().from(candidateProfiles).where(eq(candidateProfiles.userId, userId)).limit(1))[0] ?? null;
 }
 
-export async function getCandidateProfileByDigestTask(taskUid: string) {
-  const db = await requireDb();
-  return (await db.select().from(candidateProfiles).where(eq(candidateProfiles.weeklyDigestCronTaskUid, taskUid)).limit(1))[0] ?? null;
-}
-
 export async function listConfirmedCandidateProfiles(limit = 100) {
   const db = await requireDb();
   return db.select().from(candidateProfiles).where(eq(candidateProfiles.profileConfirmed, true)).limit(limit);
 }
 
-export async function updateWeeklyDigestSchedule(userId: number, values: { enabled?: boolean; taskUid?: string | null; lastSentAt?: Date | null }) {
+export async function listWeeklyDigestCandidates(limit = 50) {
   const db = await requireDb();
-  await db.update(candidateProfiles).set({ weeklyDigestEnabled: values.enabled, weeklyDigestCronTaskUid: values.taskUid, weeklyDigestLastSentAt: values.lastSentAt }).where(eq(candidateProfiles.userId, userId));
+  return db.select().from(candidateProfiles).where(and(eq(candidateProfiles.profileConfirmed, true), eq(candidateProfiles.weeklyDigestEnabled, true))).limit(limit);
+}
+
+export async function updateWeeklyDigestSchedule(userId: number, values: { enabled?: boolean; lastSentAt?: Date | null }) {
+  const db = await requireDb();
+  await db.update(candidateProfiles).set({ weeklyDigestEnabled: values.enabled, weeklyDigestLastSentAt: values.lastSentAt }).where(eq(candidateProfiles.userId, userId));
   return getCandidateProfile(userId);
+}
+
+export type WeeklyDigestDeliveryStatus = "processing" | "delivered" | "failed";
+export type WeeklyDigestEmailStatus = "pending_provider" | "sent" | "failed" | "not_requested";
+
+export async function claimWeeklyDigestDelivery(userId: number, periodKey: string) {
+  const db = await requireDb();
+  const existing = (await db.select().from(weeklyDigestDeliveries).where(and(eq(weeklyDigestDeliveries.userId, userId), eq(weeklyDigestDeliveries.periodKey, periodKey))).limit(1))[0] ?? null;
+  if (existing) return { delivery: existing, claimed: false };
+  try {
+    await db.insert(weeklyDigestDeliveries).values({ userId, periodKey, status: "processing", emailStatus: "pending_provider" });
+    const delivery = (await db.select().from(weeklyDigestDeliveries).where(and(eq(weeklyDigestDeliveries.userId, userId), eq(weeklyDigestDeliveries.periodKey, periodKey))).limit(1))[0] ?? null;
+    return { delivery, claimed: Boolean(delivery) };
+  } catch {
+    // The unique user/period constraint is the atomic claim under concurrent invocations.
+    const delivery = (await db.select().from(weeklyDigestDeliveries).where(and(eq(weeklyDigestDeliveries.userId, userId), eq(weeklyDigestDeliveries.periodKey, periodKey))).limit(1))[0] ?? null;
+    return { delivery, claimed: false };
+  }
+}
+
+export async function finishWeeklyDigestDelivery(id: number, values: { status: WeeklyDigestDeliveryStatus; emailStatus: WeeklyDigestEmailStatus; recommendationCount?: number; failureReason?: string | null; inAppDeliveredAt?: Date | null }) {
+  const db = await requireDb();
+  await db.update(weeklyDigestDeliveries).set(values).where(eq(weeklyDigestDeliveries.id, id));
+  return (await db.select().from(weeklyDigestDeliveries).where(eq(weeklyDigestDeliveries.id, id)).limit(1))[0] ?? null;
 }
 
 export async function upsertCandidateProfile(userId: number, input: Omit<InsertCandidateProfile, "id" | "userId" | "createdAt" | "updatedAt">) {

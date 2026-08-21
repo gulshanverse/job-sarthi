@@ -1,11 +1,10 @@
 import type { Request, Response } from "express";
 import { createApplicationTimelineEvent, createNotification, getApplicationForUser, getCandidateProfile, listDueInterviewReminders, markInterviewReminderSent } from "./db";
-import { sdk } from "./_core/sdk";
+import { requireSchedulerAuth } from "./schedulerAuth";
 
 export async function scheduledInterviewReminder(req: Request, res: Response) {
   try {
-    const actor = await sdk.authenticateRequest(req);
-    if (!actor.isCron) return res.status(403).json({ error: "cron-only" });
+    if (!requireSchedulerAuth(req, res)) return;
     const reminders = await listDueInterviewReminders(50);
     let processed = 0;
     for (const reminder of reminders) {

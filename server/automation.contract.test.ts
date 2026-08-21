@@ -14,8 +14,8 @@ describe("matching and reminder automation contracts", () => {
     expect(newJobRefresh).toContain("fingerprint: `high-match:${job.id}`");
   });
 
-  it("requires cron authentication, processes only bounded due work, and records a deduplicated in-app result", () => {
-    expect(reminder).toContain("if (!actor.isCron)");
+  it("requires Job Sarthi machine authentication, processes only bounded due work, and records a deduplicated in-app result", () => {
+    expect(reminder).toContain("requireSchedulerAuth(req, res)");
     expect(reminder).toContain("listDueInterviewReminders(50)");
     expect(reminder).toContain("fingerprint: `interview-reminder:${reminder.id}`");
     expect(reminder).toContain("markInterviewReminderSent(reminder.id)");

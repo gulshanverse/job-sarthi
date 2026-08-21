@@ -131,6 +131,27 @@ export const candidateProfiles = mysqlTable(
   table => [uniqueIndex("candidate_profiles_user_unique").on(table.userId)],
 );
 
+export const weeklyDigestDeliveries = mysqlTable(
+  "weekly_digest_deliveries",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    userId: int("userId").notNull(),
+    periodKey: varchar("periodKey", { length: 16 }).notNull(),
+    status: mysqlEnum("status", ["processing", "delivered", "failed"]).default("processing").notNull(),
+    emailStatus: mysqlEnum("emailStatus", ["pending_provider", "sent", "failed", "not_requested"]).default("pending_provider").notNull(),
+    recommendationCount: int("recommendationCount").default(0).notNull(),
+    failureReason: varchar("failureReason", { length: 500 }),
+    inAppDeliveredAt: timestamp("inAppDeliveredAt"),
+    emailDeliveredAt: timestamp("emailDeliveredAt"),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  },
+  table => [
+    uniqueIndex("weekly_digest_delivery_user_period_unique").on(table.userId, table.periodKey),
+    index("weekly_digest_delivery_status_idx").on(table.status),
+  ],
+);
+
 export const resumes = mysqlTable(
   "resumes",
   {
